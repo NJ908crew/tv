@@ -293,6 +293,16 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .next-card .art { display: none; }
 }
 @media (hover: none) { .bob { display: none; } }
+/* section switch: page builds top-down */
+@keyframes bIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes bImg { from { opacity: 0; transform: scale(1.06); filter: brightness(.4); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes bTile { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
+.building .bb-media { animation: bImg .6s cubic-bezier(.2,.7,.2,1) both; }
+.building .bb-copy > *, .building .bb-side { animation: bIn .38s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(60ms + var(--k,0) * 55ms); }
+.building .row-head { animation: bIn .35s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(280ms + var(--r,0) * 70ms); }
+.building .row .track > * { animation: bTile .4s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(310ms + var(--r,0) * 70ms + var(--c,0) * 30ms); }
+.nav #links button { transition: opacity .2s; }
+.building-nav #links button { animation: bIn .3s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--c,0) * 35ms); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -822,6 +832,21 @@ const NAV = {
   skate: [['home', 'Home'], ['full', 'Full-Length'], ['tours', 'Tours'], ['boxart', 'VHS & DVD'], ['brands', 'Brands'], ['mylist', 'My List']],
   music: [['home', 'Home'], ['hardcore', 'Hardcore'], ['hiphop', 'Hip Hop'], ['live', 'Live Sets'], ['artists', 'Artists'], ['mylist', 'My List']],
 };
+function buildIn() {
+  if (reduce) return;
+  const hv = $('homeview'), nv = $('nav');
+  hv.classList.remove('building'); nv.classList.remove('building-nav'); void hv.offsetWidth;
+  hv.querySelectorAll('.bb-copy > *').forEach((el, i) => el.style.setProperty('--k', i));
+  document.querySelector('.bb-side').style.setProperty('--k', 4);
+  hv.querySelectorAll('#rows .row').forEach((row, r) => {
+    row.style.setProperty('--r', Math.min(r, 8));
+    const tr = row.querySelector('.track'); if (!tr) return;
+    [...tr.children].forEach((t, c) => t.style.setProperty('--c', Math.min(c, 8)));
+  });
+  $('links').querySelectorAll('button').forEach((b, c) => b.style.setProperty('--c', c));
+  hv.classList.add('building'); nv.classList.add('building-nav');
+  clearTimeout(buildIn.t); buildIn.t = setTimeout(() => { hv.classList.remove('building'); nv.classList.remove('building-nav'); }, 1600);
+}
 function setSection(sec, first) {
   SEC = sec === 'music' ? 'music' : 'skate';
   ALL = SEC === 'music' ? MUSIC : SKATE; PLAYABLE = ALL.filter(v => v.e);
@@ -831,6 +856,7 @@ function setSection(sec, first) {
   $('links').innerHTML = NAV[SEC].map(([v, l]) => `<button data-view="${v}">${esc(l)}</button>`).join('');
   $('chooser').hidden = true;
   stopPreview(); setBillboard(); goHome();
+  if (!first) buildIn();
   if (!first && bbReady) bbTimer = setTimeout(startPreview, 2600);
 }
 $('secswitch').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.sec !== SEC) setSection(b.dataset.sec); };
