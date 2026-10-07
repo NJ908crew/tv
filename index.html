@@ -498,7 +498,7 @@ function buildMusicRows() {
   rows.push({ title: 'Hip Hop', items: vids.filter(v => v.g === 'Hip Hop').sort((a, b) => b.v - a.v), kind: 'wide', more: 'hiphop' });
   rows.push({ title: 'Full Sets & Live Sessions', items: ALL.filter(v => v.live).sort((a, b) => b.v - a.v), kind: 'wide', more: 'live' });
   rows.push({ title: 'Tiny Desk, KEXP & Studio Sessions', items: ALL.filter(v => v.live && SESSION.test(v.src)).sort((a, b) => b.v - a.v), kind: 'wide' });
-  rows.push({ title: 'Golden Era Hip Hop · 1989–1999', items: vids.filter(v => v.g === 'Hip Hop' && v.ry && v.ry >= 1986 && v.ry <= 1999).sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Golden Era Hip Hop · 1989–1999', items: vids.filter(v => v.g === 'Hip Hop' && v.ry && v.ry >= 1989 && v.ry <= 1999).sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Hardcore Classics', items: vids.filter(v => v.g === 'Hardcore' && v.ry && v.ry < 2005).sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Hardcore Live', items: ALL.filter(v => v.live && v.g === 'Hardcore').sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Hip Hop Live', items: ALL.filter(v => v.live && v.g === 'Hip Hop').sort((a, b) => b.v - a.v), kind: 'wide' });
