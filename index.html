@@ -36,6 +36,26 @@ a { color: inherit; }
 :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
 img { display: block; max-width: 100%; }
 [hidden] { display: none !important; }
+:root[data-sec="music"] { --amber: #ff5c8a; --amber-ink: #23040f; }
+.sec-switch { display: inline-flex; background: rgba(255,255,255,.08); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; flex: none; }
+.sec-switch button { background: none; border: 0; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.sec-switch button.on { background: var(--amber); color: var(--amber-ink); }
+.sec-switch button:not(.on):hover { color: var(--ink); }
+.chooser { position: fixed; inset: 0; z-index: 70; background: var(--bg); display: grid; place-items: center; padding: 24px 16px; overflow-y: auto; }
+.chooser .in { display: grid; gap: clamp(20px, 4vh, 40px); justify-items: center; width: min(1000px, 100%); }
+.chooser .lg { font-family: var(--f-display); font-weight: 900; font-size: 30px; text-transform: uppercase; }
+.chooser .lg b { color: #f2a93b; }
+.chooser h1 { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: clamp(34px, 5vw, 64px); text-transform: uppercase; line-height: .9; text-align: center; }
+.choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 2.5vw, 28px); width: 100%; }
+.choice { position: relative; aspect-ratio: 4 / 5; border: 0; padding: 0; border-radius: 8px; overflow: hidden; background: #000; text-align: left; outline: 3px solid transparent; transition: outline-color .2s, transform .25s; }
+.choice:hover, .choice:focus-visible { outline-color: var(--c); transform: translateY(-4px); }
+.choice img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.9) brightness(.62); transition: filter .3s; }
+.choice:hover img { filter: saturate(1.05) brightness(.8); }
+.choice .tx { position: absolute; left: 0; right: 0; bottom: 0; padding: clamp(14px, 3vw, 28px); display: grid; gap: 6px; background: linear-gradient(0deg, rgba(0,0,0,.85), rgba(0,0,0,0)); }
+.choice .tx b { font-family: var(--f-display); font-weight: 900; font-size: clamp(36px, 7vw, 84px); line-height: .85; text-transform: uppercase; color: var(--ink); }
+.choice .tx span { font-family: var(--f-mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--c); }
+.choice .tx small { color: #ddd; font-size: 15px; }
+.cap .ar { display: block; font-size: 12px; font-weight: 600; color: var(--amber); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1px; }
 
 /* ---------- nav ---------- */
 .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; display: flex; align-items: center; gap: 28px;
@@ -245,6 +265,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 }
 @media (max-width: 860px) {
   .links { display: none; }
+  .sec-switch button { padding: 5px 10px; }
   .player { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .stage { place-items: start stretch; }
   .frame { max-width: 100%; }
@@ -280,18 +301,12 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 <body>
 <nav class="nav" id="nav">
   <button class="logo" id="home" aria-label="OutofStep.tv home">OutofStep<b>.tv</b></button>
-  <div class="links" id="links">
-    <button data-view="home" class="on">Home</button>
-    <button data-view="full">Full-Length</button>
-    <button data-view="tours">Tours</button>
-    <button data-view="boxart">VHS &amp; DVD</button>
-    <button data-view="brands">Brands</button>
-    <button data-view="mylist">My List</button>
-  </div>
+  <div class="sec-switch" id="secswitch" role="tablist" aria-label="Section"><button data-sec="skate" role="tab">Skate</button><button data-sec="music" role="tab">Music</button></div>
+  <div class="links" id="links"></div>
   <div class="spacer"></div>
   <div class="search" id="searchbox">
     <button id="searchbtn" aria-label="Search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
-    <input id="q" type="search" placeholder="Titles, brands, years" aria-label="Search">
+    <input id="q" type="search" placeholder="Titles, brands, artists" aria-label="Search">
   </div>
   <button class="live-btn" id="livebtn"><i></i><span>Live</span></button>
 </nav>
@@ -366,15 +381,32 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   </aside>
 </section>
 
+<div class="chooser" id="chooser" hidden>
+  <div class="in">
+    <div class="lg">OutofStep<b>.tv</b></div>
+    <h1>What are you watching?</h1>
+    <div class="choices">
+      <button class="choice" data-sec="skate" style="--c:#f2a93b"><img src="covers/xLIozOhCrSk.jpg" alt=""><div class="tx"><span>Section 01</span><b>Skate</b><small>Full-length skate videos from the brands, shops and mags</small></div></button>
+      <button class="choice" data-sec="music" style="--c:#ff5c8a"><img src="https://i.ytimg.com/vi/C5_QkWHzOa0/maxresdefault.jpg" alt=""><div class="tx"><span>Section 02</span><b>Music</b><small>Hardcore and Hip Hop · music videos and live sets</small></div></button>
+    </div>
+  </div>
+</div>
 <script src="videos.js"></script>
+<script src="music.js"></script>
 <script>
 /* ================= data ================= */
-const ALL = (window.SKATE_VIDEOS || []).slice();
-const BY = Object.fromEntries(ALL.map(v => [v.id, v]));
-const PLAYABLE = ALL.filter(v => v.e);
+const SKATE = (window.SKATE_VIDEOS || []).map(v => ({ ...v, sec: 'skate' }));
+const MUSIC = (window.MUSIC_VIDEOS || []).map(v => ({ ...v, sec: 'music', ch: v.ar, tour: false, a: 0, ry: v.y, live: v.k === 'live' }));
+const BY = Object.fromEntries([...SKATE, ...MUSIC].map(v => [v.id, v]));
+let SEC = 'skate', ALL = SKATE, PLAYABLE = SKATE.filter(v => v.e);
 const $ = id => document.getElementById(id);
-const cover = id => `covers/${id}.jpg`;
+const cover = id => { const v = BY[id]; return v && v.sec === 'music' ? `https://i.ytimg.com/vi/${id}/${v.hq ? 'hqdefault' : 'maxresdefault'}.jpg` : `covers/${id}.jpg`; };
 const art = v => v.a ? `covers/art/${v.id}.jpg` : cover(v.id);
+const isM = v => v && v.sec === 'music';
+const full = v => isM(v) ? `${v.ar} – ${v.t}` : v.t;
+const kindTxt = v => isM(v) ? (v.live ? 'Live set' : 'Music video') : (v.tour ? 'Tour video' : 'Full-length video');
+const boxTxt = v => isM(v) ? (v.live ? 'LIVE' : 'VIDEO') : (v.tour ? 'TOUR' : 'FULL');
+const CH = () => SEC === 'music' ? 'Channel 8' : 'Channel 7';
 const yti = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const fb = id => `onerror="this.onerror=null;this.src='${yti(id)}'"`;
 const fmt = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
@@ -392,11 +424,13 @@ let progress = store.get('progress', {});
 const yearOf = v => v.ry || v.y;
 const match = v => Math.min(99, 70 + Math.round(Math.log10(Math.max(10, v.v)) * 4));
 function blurb(v) {
+  if (isM(v)) return `${v.live ? 'Live set' : 'Music video'} from ${v.ar}. ${v.g}${v.y ? ', ' + v.y : ''}. ${mins(v.s)}.${v.v ? ` ${viewsTxt(v.v).replace(' views', '')} views on YouTube.` : ''} Via ${v.src}.`;
   const kind = v.tour ? 'Tour video' : (v.s >= 3600 ? 'Feature-length video' : 'Full-length video');
   const rel = v.ry ? ` Originally released in ${v.ry}${v.a ? ' on VHS/DVD' : ''}.` : '';
   return `${kind} from ${v.ch}. ${mins(v.s)} of skating.${rel}${v.v ? ` ${viewsTxt(v.v).replace(' views', '')} views on YouTube.` : ''}`;
 }
 function tags(v) {
+  if (isM(v)) return [v.g, v.live ? 'Live' : 'Music video', v.ar];
   const t = [v.tour ? 'Tour' : 'Full-length'];
   if (v.a) t.push('VHS / DVD era');
   if (v.s >= 3000) t.push('Feature');
@@ -408,16 +442,17 @@ function tags(v) {
 /* ================= rows ================= */
 let ROWS = [];
 function buildRows() {
+  if (SEC === 'music') return buildMusicRows();
   const rows = [];
-  const cont = Object.entries(progress).filter(([id, p]) => BY[id] && p.t > 30 && p.t < p.d - 60).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]);
+  const cont = Object.entries(progress).filter(([id, p]) => BY[id] && BY[id].sec === SEC && p.t > 30 && p.t < p.d - 60).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]);
   if (cont.length) rows.push({ title: 'Continue Watching', items: cont, kind: 'wide', bars: true });
   const top = [...ALL].filter(v => v.e).sort((a, b) => b.v - a.v).slice(0, 10);
   rows.push({ title: 'Top 10 on OutofStep.tv', items: top, kind: 'top' });
   const boxed = ALL.filter(v => v.a);
   if (boxed.length) rows.push({ title: 'From the VHS & DVD shelf', items: shuffle(boxed), kind: 'tall', more: 'boxart' });
-  const last = Object.entries(progress).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]).find(Boolean);
+  const last = Object.entries(progress).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]).find(v => v && v.sec === SEC);
   if (last) { const like = ALL.filter(v => v.ch === last.ch && v.id !== last.id); if (like.length >= 3) rows.push({ title: `Because you watched ${last.t}`, items: shuffle(like), kind: 'wide' }); }
-  const ml = myList.map(id => BY[id]).filter(Boolean);
+  const ml = myList.map(id => BY[id]).filter(v => v && v.sec === SEC);
   if (ml.length) rows.push({ title: 'My List', items: ml, kind: 'wide' });
   rows.push({ title: 'New on OutofStep.tv', items: ALL.filter(v => v.y >= 2025).sort((a, b) => b.y - a.y || b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Feature Length · 50 Minutes +', items: shuffle(ALL.filter(v => v.s >= 3000)), kind: 'wide' });
@@ -432,11 +467,33 @@ function buildRows() {
   if (small.length) rows.push({ title: 'More from Brands & Shops', items: small, kind: 'wide' });
   return rows.filter(r => r.items.length);
 }
+function buildMusicRows() {
+  const rows = [];
+  const mine = v => v && v.sec === 'music';
+  const cont = Object.entries(progress).filter(([id, p]) => mine(BY[id]) && p.t > 20 && p.t < p.d - 20).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]);
+  if (cont.length) rows.push({ title: 'Continue Watching', items: cont, kind: 'wide', bars: true });
+  const vids = ALL.filter(v => !v.live);
+  rows.push({ title: 'Top 10 Music Videos', items: [...vids].sort((a, b) => b.v - a.v).slice(0, 10), kind: 'top' });
+  const last = Object.entries(progress).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]).find(mine);
+  if (last) { const like = ALL.filter(v => v.g === last.g && v.id !== last.id); if (like.length >= 3) rows.push({ title: `Because you watched ${last.ar}`, items: shuffle(like), kind: 'wide' }); }
+  const ml = myList.map(id => BY[id]).filter(mine);
+  if (ml.length) rows.push({ title: 'My List', items: ml, kind: 'wide' });
+  rows.push({ title: 'Hardcore', items: vids.filter(v => v.g === 'Hardcore').sort((a, b) => b.v - a.v), kind: 'wide', more: 'hardcore' });
+  rows.push({ title: 'Hip Hop', items: vids.filter(v => v.g === 'Hip Hop').sort((a, b) => b.v - a.v), kind: 'wide', more: 'hiphop' });
+  rows.push({ title: 'Full Sets & Live Sessions', items: ALL.filter(v => v.live).sort((a, b) => b.s - a.s), kind: 'wide', more: 'live' });
+  rows.push({ title: 'Golden Era Hip Hop · 1989–1999', items: vids.filter(v => v.g === 'Hip Hop' && v.y <= 1999).sort((a, b) => a.y - b.y), kind: 'wide' });
+  rows.push({ title: 'Hardcore Classics', items: vids.filter(v => v.g === 'Hardcore' && v.y < 2005).sort((a, b) => a.y - b.y), kind: 'wide' });
+  rows.push({ title: 'Hardcore Live', items: ALL.filter(v => v.live && v.g === 'Hardcore'), kind: 'wide' });
+  rows.push({ title: 'Hip Hop Live', items: ALL.filter(v => v.live && v.g === 'Hip Hop'), kind: 'wide' });
+  Object.entries(groupBy(ALL, v => v.ar)).filter(([, i]) => i.length >= 3).forEach(([ar, items]) => rows.push({ title: `Spotlight: ${ar}`, items, kind: 'wide' }));
+  rows.push({ title: 'New Releases', items: ALL.filter(v => v.y >= 2020).sort((a, b) => b.y - a.y), kind: 'wide' });
+  return rows.filter(r => r.items.length);
+}
 function tileHTML(v, i, kind, bars) {
   const p = progress[v.id]; const pct = bars && p && p.d ? Math.min(100, p.t / p.d * 100) : 0;
   const flag = v.y >= 2026 ? '<span class="flag">New</span>' : '';
   if (kind === 'tall') return `<button class="tile t" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${art(v)}" alt="${esc(v.t)}" ${fb(v.id)}></button>`;
-  return `<button class="tile w ${pct ? 'has-bar' : ''}" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${cover(v.id)}" alt="" ${fb(v.id)}>${flag}<span class="cap">${esc(v.t)}</span>${pct ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ''}</button>`;
+  return `<button class="tile w ${pct ? 'has-bar' : ''}" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${cover(v.id)}" alt="" ${fb(v.id)}>${flag}<span class="cap">${isM(v) ? `<span class="ar">${esc(v.ar)}</span>` : ''}${esc(v.t)}</span>${pct ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ''}</button>`;
 }
 function topHTML(v, i) {
   return `<div class="top-item"><span class="num" aria-hidden="true">${i + 1}</span><button class="tile t" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${art(v)}" alt="${esc(v.t)}" ${fb(v.id)}></button></div>`;
@@ -467,7 +524,7 @@ $('rows').addEventListener('click', e => {
   const h = e.target.closest('.handle');
   if (h) { const t = h.parentElement.querySelector('.track'); t.scrollBy({ left: +h.dataset.dir * (t.clientWidth - 40), behavior: 'smooth' }); return; }
   const ex = e.target.closest('[data-explore]');
-  if (ex) { const r = ROWS[+ex.dataset.explore]; if (r.more === 'boxart') return showPage('boxart'); return showGrid(r.title, r.items); }
+  if (ex) { const r = ROWS[+ex.dataset.explore]; if (r.more) return showPage(r.more); return showGrid(r.title, r.items); }
   const tile = e.target.closest('.tile');
   if (tile) { const r = ROWS[+tile.closest('.row').dataset.row]; openDetail(BY[tile.dataset.id], r.items); }
 });
@@ -495,7 +552,7 @@ function showBob(tile) {
   bob.style.width = W + 'px'; bob.style.left = left + 'px'; bob.style.top = top + 'px';
   bob.style.transformOrigin = left <= 12 ? 'left center' : left >= window.innerWidth - W - 12 ? 'right center' : 'center center';
   const inList = myList.includes(v.id);
-  bob.innerHTML = `<div class="media"><img src="${cover(v.id)}" alt="" ${fb(v.id)}><div class="t">${esc(v.t)}</div></div>
+  bob.innerHTML = `<div class="media"><img src="${cover(v.id)}" alt="" ${fb(v.id)}><div class="t">${esc(full(v))}</div></div>
     <div class="body">
       <div class="btns">
         <button class="round fill" data-a="play" aria-label="Play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4v16l14-8z"/></svg></button>
@@ -503,7 +560,7 @@ function showBob(tile) {
         <span class="grow"></span>
         <button class="round" data-a="info" aria-label="More info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
       </div>
-      <div class="facts"><span class="hot">${match(v)}% Match</span><span class="box">${v.tour ? 'TOUR' : 'FULL'}</span><span>${mins(v.s)}</span>${yearOf(v) ? `<span>${yearOf(v)}</span>` : ''}${v.a ? '<span class="box">VHS/DVD</span>' : ''}</div>
+      <div class="facts"><span class="hot">${match(v)}% Match</span><span class="box">${boxTxt(v)}</span><span>${mins(v.s)}</span>${yearOf(v) ? `<span>${yearOf(v)}</span>` : ''}${v.a ? '<span class="box">VHS/DVD</span>' : ''}</div>
       <div class="genres">${tags(v).map(t => `<span>${esc(t)}</span>`).join('')}</div>
     </div>`;
   bob.dataset.id = v.id;
@@ -522,10 +579,10 @@ window.addEventListener('scroll', () => { if (bob.classList.contains('on')) hide
 /* ================= billboard ================= */
 let bbPick, bbYT = null, bbReady = false, bbTimer = 0, bbMuted = true;
 function setBillboard() {
-  const pool = PLAYABLE.filter(v => !v.tour && v.v > 120000);
+  const pool = SEC === 'music' ? PLAYABLE.filter(v => !v.live && v.v > 1e6) : PLAYABLE.filter(v => !v.tour && v.v > 120000);
   bbPick = pool[Math.random() * pool.length | 0] || PLAYABLE[0]; if (!bbPick) return;
   $('bbimg').style.backgroundImage = `url("${cover(bbPick.id)}")`;
-  $('bbkicker').innerHTML = `<b>${esc(bbPick.ch)}</b>${bbPick.a ? '· From the VHS &amp; DVD shelf' : '· ' + (bbPick.tour ? 'Tour video' : 'Full-length video')}`;
+  $('bbkicker').innerHTML = isM(bbPick) ? `<b>${esc(bbPick.ar)}</b>· ${esc(bbPick.g)} · ${kindTxt(bbPick)}` : `<b>${esc(bbPick.ch)}</b>${bbPick.a ? '· From the VHS &amp; DVD shelf' : '· ' + kindTxt(bbPick)}`;
   $('bbtitle').textContent = bbPick.t;
   $('bbdesc').textContent = blurb(bbPick);
   $('bbbadge').textContent = `${mins(bbPick.s)}${yearOf(bbPick) ? ' · ' + yearOf(bbPick) : ''}`;
@@ -546,29 +603,33 @@ new IntersectionObserver(es => es.forEach(en => { if (!bbYT || !bbReady) return;
 let modalList = null;
 function openDetail(v, list) {
   if (!v) return; modalList = list || [v]; hideBob();
-  const more = ALL.filter(x => x.ch === v.ch && x.id !== v.id).sort((a, b) => b.v - a.v).slice(0, 12);
+  let more = ALL.filter(x => x.ch === v.ch && x.id !== v.id).sort((a, b) => b.v - a.v).slice(0, 12);
+  const moreTitle = isM(v) && more.length < 3 ? `More ${v.g}` : `More from ${v.ch}`;
+  if (isM(v) && more.length < 3) more = ALL.filter(x => x.g === v.g && x.id !== v.id).sort((a, b) => b.v - a.v).slice(0, 12);
   const inList = myList.includes(v.id);
   $('modalwrap').innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(v.t)}">
     <button class="m-close" data-a="close" aria-label="Close"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <div class="m-hero"><img src="${cover(v.id)}" alt="" ${fb(v.id)}>
-      <div class="copy"><h2>${esc(v.t)}</h2>
+      <div class="copy">${isM(v) ? `<div class="bb-kicker"><b>${esc(v.ar)}</b>· ${esc(v.g)}</div>` : ''}<h2>${esc(v.t)}</h2>
         <div class="actions">
           ${v.e ? `<button class="btn primary" data-a="play"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4v16l14-8z"/></svg>Play</button>` : `<a class="btn primary" href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">Watch on YouTube ↗</a>`}
           <button class="round" data-a="list" aria-label="My List">${inList ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg>' : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>'}</button>
         </div></div></div>
     <div class="m-body">
       <div style="display:grid;gap:14px;align-content:start">
-        <div class="facts"><span class="hot">${match(v)}% Match</span>${yearOf(v) ? `<span>${yearOf(v)}</span>` : ''}<span>${mins(v.s)}</span><span class="box">${v.tour ? 'TOUR' : 'FULL-LENGTH'}</span>${v.a ? '<span class="box">VHS/DVD</span>' : ''}</div>
+        <div class="facts"><span class="hot">${match(v)}% Match</span>${yearOf(v) ? `<span>${yearOf(v)}</span>` : ''}<span>${mins(v.s)}</span><span class="box">${isM(v) ? boxTxt(v) : (v.tour ? 'TOUR' : 'FULL-LENGTH')}</span>${v.a ? '<span class="box">VHS/DVD</span>' : ''}</div>
         <p>${esc(blurb(v))}</p>
       </div>
       <div class="m-side">
         ${v.a ? `<img class="boxart" src="${art(v)}" alt="${esc(v.t)} cover art">` : ''}
-        <div>From: <b>${esc(v.ch)}</b></div>
-        <div>Type: <b>${v.tour ? 'Tour video' : 'Full-length video'}</b></div>
+        <div>${isM(v) ? 'Artist' : 'From'}: <b>${esc(v.ch)}</b></div>
+        ${isM(v) ? `<div>Genre: <b>${esc(v.g)}</b></div>` : ''}
+        <div>Type: <b>${kindTxt(v)}</b></div>
+        ${isM(v) ? `<div>Posted by: <b>${esc(v.src)}</b></div>` : ''}
         ${v.v ? `<div>On YouTube: <b>${viewsTxt(v.v)}</b></div>` : ''}
       </div>
     </div>
-    ${more.length ? `<div class="m-more"><h3>More from ${esc(v.ch)}</h3><div class="m-grid">${more.map(x => `<button class="m-card" data-id="${x.id}"><div class="im"><img loading="lazy" src="${cover(x.id)}" alt="" ${fb(x.id)}><span>${fmt(x.s)}</span></div><div class="tx"><b>${esc(x.t)}</b><small>${yearOf(x) || ''} · ${mins(x.s)}</small></div></button>`).join('')}</div></div>` : ''}
+    ${more.length ? `<div class="m-more"><h3>${esc(moreTitle)}</h3><div class="m-grid">${more.map(x => `<button class="m-card" data-id="${x.id}"><div class="im"><img loading="lazy" src="${cover(x.id)}" alt="" ${fb(x.id)}><span>${fmt(x.s)}</span></div><div class="tx"><b>${esc(full(x))}</b><small>${yearOf(x) || ''} · ${mins(x.s)}</small></div></button>`).join('')}</div></div>` : ''}
   </div>`;
   $('modalwrap').hidden = false; document.body.classList.add('lock'); $('modalwrap').scrollTop = 0;
   $('modalwrap').dataset.id = v.id;
@@ -601,17 +662,22 @@ function showGrid(title, items, extraHTML = '', tall = false) {
 }
 function chipsHTML(active) {
   const g = groupBy(ALL, v => v.ch);
+  if (!Object.keys(g).length) return '';
   return `<div class="chips">${Object.entries(g).sort((a, b) => a[0].localeCompare(b[0])).map(([ch, i]) => `<button class="chip ${ch === active ? 'on' : ''}" data-ch="${esc(ch)}">${esc(ch)}<b>${i.length}</b></button>`).join('')}</div>`;
 }
-function showBrand(ch) { showGrid(ch, ALL.filter(v => v.ch === ch).sort((a, b) => b.v - a.v), chipsHTML(ch)); setNav('brands'); }
+function showBrand(ch) { showGrid(ch, ALL.filter(v => v.ch === ch).sort((a, b) => b.v - a.v), chipsHTML(ch)); setNav(SEC === 'music' ? 'artists' : 'brands'); }
 function showPage(view) {
   setNav(view);
   if (view === 'home') return goHome();
+  if (view === 'hardcore') return showGrid('Hardcore', ALL.filter(v => v.g === 'Hardcore').sort((a, b) => (a.live - b.live) || b.v - a.v));
+  if (view === 'hiphop') return showGrid('Hip Hop', ALL.filter(v => v.g === 'Hip Hop').sort((a, b) => (a.live - b.live) || b.v - a.v));
+  if (view === 'live') return showGrid('Full Sets & Live Sessions', ALL.filter(v => v.live).sort((a, b) => b.s - a.s));
+  if (view === 'artists') return showGrid('Artists', [], chipsHTML());
   if (view === 'full') return showGrid('Full-Length', ALL.filter(v => !v.tour).sort((a, b) => b.v - a.v));
   if (view === 'tours') return showGrid('Tour Videos', ALL.filter(v => v.tour));
   if (view === 'boxart') return showGrid('VHS & DVD Shelf', ALL.filter(v => v.a).sort((a, b) => (a.ry || 9999) - (b.ry || 9999)), '', true);
   if (view === 'brands') return showGrid('Brands & Channels', [], chipsHTML());
-  if (view === 'mylist') return showGrid('My List', myList.map(id => BY[id]).filter(Boolean));
+  if (view === 'mylist') return showGrid('My List', myList.map(id => BY[id]).filter(v => v && v.sec === SEC));
 }
 $('links').onclick = e => { const b = e.target.closest('button'); if (b) showPage(b.dataset.view); };
 $('home').onclick = goHome;
@@ -622,7 +688,7 @@ $('q').addEventListener('input', e => {
   qT = setTimeout(() => {
     if (!q) return goHome();
     const w = q.split(/\s+/);
-    const hits = ALL.filter(v => w.every(x => `${v.t} ${v.ch} ${yearOf(v) || ''} ${v.tour ? 'tour' : 'full'}`.toLowerCase().includes(x))).sort((a, b) => b.v - a.v);
+    const hits = ALL.filter(v => w.every(x => `${v.t} ${v.ch} ${v.g || ''} ${yearOf(v) || ''} ${v.tour ? 'tour' : v.live ? 'live' : 'full'}`.toLowerCase().includes(x))).sort((a, b) => b.v - a.v);
     setNav(''); showGrid(`Results for “${raw}”`, hits);
   }, 160);
 });
@@ -632,7 +698,7 @@ function toggleList(id) {
   myList = myList.includes(id) ? myList.filter(x => x !== id) : [id, ...myList];
   store.set('mylist', myList);
 }
-$('livebtn').onclick = () => playFrom(shuffle(PLAYABLE), null, 'Live · Channel 7', true);
+$('livebtn').onclick = () => playFrom(shuffle(PLAYABLE), null, 'Live · ' + CH(), true);
 
 /* ================= player ================= */
 let yt = null, ytReady = false, pending = null;
@@ -659,7 +725,7 @@ function playFrom(list, v, title = 'Up next', live = false) {
   P.title = title; P.live = live; P.dead.clear();
   stopPreview(); hideBob(); closeDetail();
   $('player').hidden = false; document.body.classList.add('lock');
-  $('pkicker').textContent = live ? '● Live · Channel 7' : title;
+  $('pkicker').textContent = live ? '● Live · ' + CH() : title;
   begin(false); armIdle();
 }
 const cur = () => P.q[P.i];
@@ -698,13 +764,13 @@ function closePlayer() {
 }
 function renderSide() {
   const v = cur(); if (!v) return;
-  $('ptitle').textContent = v.t; $('sidetitle').textContent = v.t;
-  $('sidefacts').innerHTML = `<span>${esc(v.ch)}</span><span>${mins(v.s)}</span>${yearOf(v) ? `<span>${yearOf(v)}</span>` : ''}${v.a ? '<span class="box">VHS/DVD</span>' : ''}`;
+  $('ptitle').textContent = full(v); $('sidetitle').textContent = v.t;
+  $('sidefacts').innerHTML = `<span>${esc(v.ch)}</span>${isM(v) ? `<span class="box">${boxTxt(v)}</span>` : ''}<span>${mins(v.s)}</span>${yearOf(v) ? `<span>${yearOf(v)}</span>` : ''}${v.a ? '<span class="box">VHS/DVD</span>' : ''}`;
   $('pyt').href = 'https://www.youtube.com/watch?v=' + v.id;
   $('plist').textContent = myList.includes(v.id) ? '✓ In My List' : '+ My List';
-  $('sidesub').textContent = P.live ? 'Coming up on Channel 7' : 'Up next · ' + P.title;
+  $('sidesub').textContent = P.live ? 'Coming up on ' + CH() : 'Up next · ' + P.title;
   const n = P.q.length, idx = []; for (let k = 0; k < Math.min(n, 30); k++) idx.push((P.i + k) % n);
-  $('queue').innerHTML = idx.map((j, k) => { const q = P.q[j]; return `<button class="q ${k === 0 ? 'on' : ''} ${P.dead.has(q.id) ? 'dead' : ''}" data-j="${j}"><span class="n">${k === 0 ? '▶' : k}</span><div class="im"><img loading="lazy" src="${cover(q.id)}" alt="" ${fb(q.id)}><span>${fmt(q.s)}</span></div><div><div class="t">${esc(q.t)}</div><div class="c">${k === 0 ? 'Now playing' : esc(q.ch)}</div></div></button>`; }).join('');
+  $('queue').innerHTML = idx.map((j, k) => { const q = P.q[j]; return `<button class="q ${k === 0 ? 'on' : ''} ${P.dead.has(q.id) ? 'dead' : ''}" data-j="${j}"><span class="n">${k === 0 ? '▶' : k}</span><div class="im"><img loading="lazy" src="${cover(q.id)}" alt="" ${fb(q.id)}><span>${fmt(q.s)}</span></div><div><div class="t">${esc(isM(q) ? q.t : q.t)}</div><div class="c">${k === 0 ? 'Now playing' : esc(q.ch)}</div></div></button>`; }).join('');
   $('queue').scrollTop = 0;
 }
 $('queue').onclick = e => { const b = e.target.closest('.q'); if (!b) return; P.i = +b.dataset.j; P.dead.delete(cur().id); begin(false); };
@@ -724,10 +790,10 @@ function showNextCard(v, done) {
   staticOn(false);
   $('ncbg').src = cover(v.id); $('ncbg').onerror = function () { this.onerror = null; this.src = yti(v.id); };
   $('ncart').src = art(v); $('ncart').hidden = !v.a;
-  $('nck').textContent = P.live ? 'Up next on Channel 7' : 'Next video';
-  $('nct').textContent = v.t; $('ncc').textContent = `${v.ch} · ${mins(v.s)}${yearOf(v) ? ' · ' + yearOf(v) : ''}`;
+  $('nck').textContent = P.live ? 'Up next on ' + CH() : 'Next video';
+  $('nct').textContent = full(v); $('ncc').textContent = `${v.ch} · ${mins(v.s)}${yearOf(v) ? ' · ' + yearOf(v) : ''}`;
   $('nextcard').hidden = false;
-  let left = 8; $('nccount').textContent = `Starts in ${left}`;
+  let left = isM(v) ? 4 : 8; $('nccount').textContent = `Starts in ${left}`;
   P.cdDone = done;
   P.cd = setInterval(() => { left--; $('nccount').textContent = `Starts in ${Math.max(0, left)}`; if (left <= 0) { clearInterval(P.cd); P.cd = 0; done(); } }, 1000);
 }
@@ -751,8 +817,26 @@ document.addEventListener('keydown', e => {
   if (e.key === '/') { e.preventDefault(); $('searchbtn').click(); }
 });
 
+const NAV = {
+  skate: [['home', 'Home'], ['full', 'Full-Length'], ['tours', 'Tours'], ['boxart', 'VHS & DVD'], ['brands', 'Brands'], ['mylist', 'My List']],
+  music: [['home', 'Home'], ['hardcore', 'Hardcore'], ['hiphop', 'Hip Hop'], ['live', 'Live Sets'], ['artists', 'Artists'], ['mylist', 'My List']],
+};
+function setSection(sec, first) {
+  SEC = sec === 'music' ? 'music' : 'skate';
+  ALL = SEC === 'music' ? MUSIC : SKATE; PLAYABLE = ALL.filter(v => v.e);
+  store.set('sec', SEC);
+  document.documentElement.dataset.sec = SEC;
+  document.querySelectorAll('#secswitch button').forEach(b => { b.classList.toggle('on', b.dataset.sec === SEC); b.setAttribute('aria-selected', String(b.dataset.sec === SEC)); });
+  $('links').innerHTML = NAV[SEC].map(([v, l]) => `<button data-view="${v}">${esc(l)}</button>`).join('');
+  $('chooser').hidden = true;
+  stopPreview(); setBillboard(); goHome();
+  if (!first && bbReady) bbTimer = setTimeout(startPreview, 2600);
+}
+$('secswitch').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.sec !== SEC) setSection(b.dataset.sec); };
+$('chooser').onclick = e => { const b = e.target.closest('.choice'); if (b) setSection(b.dataset.sec); };
+
 /* boot */
-setBillboard(); renderRows();
+{ const saved = store.get('sec', null); setSection(saved || 'skate', true); if (!saved) $('chooser').hidden = false; }
 if (location.hash === '#live') $('livebtn').click();
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
