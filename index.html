@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Skateboarding TV</title>
+<title>OutofStep.tv</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -279,7 +279,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 </head>
 <body>
 <nav class="nav" id="nav">
-  <button class="logo" id="home" aria-label="Skateboarding TV home">Skateboarding <b>TV</b></button>
+  <button class="logo" id="home" aria-label="OutofStep.tv home">OutofStep<b>.tv</b></button>
   <div class="links" id="links">
     <button data-view="home" class="on">Home</button>
     <button data-view="full">Full-Length</button>
@@ -412,14 +412,14 @@ function buildRows() {
   const cont = Object.entries(progress).filter(([id, p]) => BY[id] && p.t > 30 && p.t < p.d - 60).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]);
   if (cont.length) rows.push({ title: 'Continue Watching', items: cont, kind: 'wide', bars: true });
   const top = [...ALL].filter(v => v.e).sort((a, b) => b.v - a.v).slice(0, 10);
-  rows.push({ title: 'Top 10 on Skateboarding TV', items: top, kind: 'top' });
+  rows.push({ title: 'Top 10 on OutofStep.tv', items: top, kind: 'top' });
   const boxed = ALL.filter(v => v.a);
   if (boxed.length) rows.push({ title: 'From the VHS & DVD shelf', items: shuffle(boxed), kind: 'tall', more: 'boxart' });
   const last = Object.entries(progress).sort((a, b) => b[1].at - a[1].at).map(([id]) => BY[id]).find(Boolean);
   if (last) { const like = ALL.filter(v => v.ch === last.ch && v.id !== last.id); if (like.length >= 3) rows.push({ title: `Because you watched ${last.t}`, items: shuffle(like), kind: 'wide' }); }
   const ml = myList.map(id => BY[id]).filter(Boolean);
   if (ml.length) rows.push({ title: 'My List', items: ml, kind: 'wide' });
-  rows.push({ title: 'New on Skateboarding TV', items: ALL.filter(v => v.y >= 2025).sort((a, b) => b.y - a.y || b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'New on OutofStep.tv', items: ALL.filter(v => v.y >= 2025).sort((a, b) => b.y - a.y || b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Feature Length · 50 Minutes +', items: shuffle(ALL.filter(v => v.s >= 3000)), kind: 'wide' });
   const old = ALL.filter(v => v.ry && v.ry < 2005).sort((a, b) => a.ry - b.ry);
   if (old.length >= 5) rows.push({ title: 'The Golden Era · Pre-2005', items: old, kind: 'wide' });
