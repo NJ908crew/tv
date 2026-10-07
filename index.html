@@ -239,6 +239,24 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 .next-card .ring { display: inline-flex; align-items: center; gap: 12px; }
 .next-card .ring .cnt { font-family: var(--f-mono); font-size: 15px; color: var(--dim); }
 
+.mini-hit, .mini-bar, .mini-prog { display: none; }
+.player.mini { inset: auto; right: 20px; bottom: 20px; width: min(420px, calc(100vw - 32px)); display: block; z-index: 65; border-radius: 10px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.08); animation: miniIn .32s cubic-bezier(.2,.7,.2,1); }
+@keyframes miniIn { from { opacity: 0; transform: translateY(24px) scale(.92); } to { opacity: 1; transform: none; } }
+.player.mini .side, .player.mini .p-top { display: none !important; }
+.player.mini .stage { display: block; }
+.player.mini .frame { max-width: none; max-height: none; width: 100%; }
+.player.mini .mini-hit { display: block; position: absolute; inset: 0; z-index: 7; background: none; border: 0; cursor: pointer; }
+.player.mini .mini-bar { display: flex; align-items: center; gap: 4px; position: absolute; left: 0; right: 0; bottom: 0; z-index: 8; padding: 28px 8px 8px 12px; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.88)); opacity: 0; transition: opacity .2s; }
+.player.mini:hover .mini-bar, .player.mini:focus-within .mini-bar, .player.mini.paused .mini-bar { opacity: 1; }
+@media (hover: none) { .player.mini .mini-bar { opacity: 1; } }
+.mini-tt { flex: 1; min-width: 0; }
+.mini-tt small { display: block; font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-tt b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-b { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; border: 0; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; }
+.mini-b:hover { background: var(--amber); color: var(--amber-ink); }
+.player.mini .mini-prog { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 9; background: rgba(255,255,255,.15); }
+.mini-prog i { display: block; height: 100%; width: 0; background: var(--amber); transition: width .5s linear; }
+@media (max-width: 700px) { .player.mini { right: 12px; bottom: 12px; width: min(300px, 70vw); } }
 .side { width: 360px; background: var(--bg-2); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
 .side-head { padding: 22px 18px 14px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
 .side-head h3 { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: 28px; line-height: .95; text-transform: uppercase; overflow-wrap: anywhere; }
@@ -377,6 +395,14 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
         </div>
       </div>
       <div class="notice" id="notice" hidden></div>
+      <button class="mini-hit" id="minihit" aria-label="Expand player"></button>
+      <div class="mini-bar">
+        <div class="mini-tt"><small id="minik"></small><b id="minit"></b></div>
+        <button class="mini-b" id="miniplay" aria-label="Pause"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+        <button class="mini-b" id="miniexp" aria-label="Expand player"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button>
+        <button class="mini-b" id="miniclose" aria-label="Close player"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="mini-prog"><i id="miniprog"></i></div>
     </div>
   </div>
   <aside class="side" id="side">
@@ -741,6 +767,7 @@ function playFrom(list, v, title = 'Up next', live = false) {
   P.q = list.filter(x => x.e); P.i = v ? Math.max(0, P.q.indexOf(v)) : 0;
   P.title = title; P.live = live; P.dead.clear();
   stopPreview(); hideBob(); closeDetail();
+  $('player').classList.remove('mini', 'paused'); clearInterval(P.miniT);
   $('player').hidden = false; document.body.classList.add('lock');
   $('pkicker').textContent = live ? '● Live · ' + CH() : title;
   begin(false); armIdle();
@@ -765,6 +792,7 @@ function step(d, card) {
 }
 function onState(e) {
   const S = YT.PlayerState;
+  if (isMini()) setTimeout(syncMini, 0);
   if (e.data === S.PLAYING) { staticOn(false); hideNotice(); clearInterval(P.save); P.save = setInterval(saveProg, 5000); }
   else if (e.data === S.PAUSED) { saveProg(); clearInterval(P.save); }
   else if (e.data === S.ENDED) { clearInterval(P.save); const v = cur(); if (v) { progress[v.id] = { t: v.s, d: v.s, at: Date.now() }; store.set('progress', progress); } if (P.auto || P.live) step(1, true); }
@@ -775,14 +803,40 @@ function onErr(e) {
   setTimeout(() => step(1, false), 1800);
 }
 function saveProg() { const v = cur(); if (!v || !yt || !yt.getCurrentTime) return; const t = yt.getCurrentTime(), d = yt.getDuration() || v.s; if (t > 5) { progress[v.id] = { t, d, at: Date.now() }; store.set('progress', progress); } }
+const PLAY_ICO = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>', PAUSE_ICO = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
+const isMini = () => $('player').classList.contains('mini');
+function syncMini() {
+  let playing = false; try { playing = yt && yt.getPlayerState && yt.getPlayerState() === 1; } catch (e) {}
+  $('miniplay').innerHTML = playing ? PAUSE_ICO : PLAY_ICO; $('miniplay').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  $('player').classList.toggle('paused', !playing);
+}
+function miniTick() { try { const d = yt.getDuration(), t = yt.getCurrentTime(); $('miniprog').style.width = d ? (t / d * 100) + '%' : '0'; } catch (e) {} }
+function minimizePlayer() {
+  if ($('player').hidden || isMini()) return;
+  saveProg(); clearTimeout(idleT); $('player').classList.remove('idle');
+  $('player').classList.add('mini'); document.body.classList.remove('lock');
+  syncMini(); miniTick(); clearInterval(P.miniT); P.miniT = setInterval(miniTick, 1000);
+  if (!$('homeview').hidden) renderRows();
+}
+function expandPlayer() {
+  if (!isMini()) return;
+  $('player').classList.remove('mini', 'paused'); clearInterval(P.miniT);
+  stopPreview(); hideBob(); closeDetail(); document.body.classList.add('lock'); armIdle();
+}
+$('minihit').onclick = expandPlayer;
+$('miniexp').onclick = e => { e.stopPropagation(); expandPlayer(); };
+$('miniplay').onclick = e => { e.stopPropagation(); if (!yt) return; try { yt.getPlayerState() === 1 ? yt.pauseVideo() : yt.playVideo(); } catch (er) {} setTimeout(syncMini, 150); };
+$('miniclose').onclick = e => { e.stopPropagation(); closePlayer(); };
 function closePlayer() {
-  saveProg(); clearInterval(P.save); clearCard(); try { yt && yt.stopVideo(); } catch (e) {}
+  saveProg(); clearInterval(P.save); clearInterval(P.miniT); clearCard(); try { yt && yt.stopVideo(); } catch (e) {}
+  $('player').classList.remove('mini', 'paused');
   $('player').hidden = true; document.body.classList.remove('lock');
   if (!$('homeview').hidden) { renderRows(); }
 }
 function renderSide() {
   const v = cur(); if (!v) return;
   $('ptitle').textContent = full(v); $('sidetitle').textContent = v.t;
+  $('minit').textContent = v.t; $('minik').textContent = isM(v) ? v.ar : (v.ch || '');
   $('sidefacts').innerHTML = `<span>${esc(v.ch)}</span>${isM(v) ? `<span class="box">${boxTxt(v)}</span>` : ''}<span>${mins(v.s)}</span>${yearOf(v) ? `<span>${yearOf(v)}</span>` : ''}${v.a ? '<span class="box">VHS/DVD</span>' : ''}`;
   $('pyt').href = 'https://www.youtube.com/watch?v=' + v.id;
   $('plist').textContent = myList.includes(v.id) ? '✓ In My List' : '+ My List';
@@ -796,11 +850,11 @@ $('pprev').onclick = () => step(-1, false);
 $('pnext').onclick = () => step(1, false);
 $('pauto').onclick = () => { P.auto = !P.auto; store.set('auto', P.auto); $('pauto').setAttribute('aria-pressed', String(P.auto)); };
 $('plist').onclick = () => { const v = cur(); if (v) { toggleList(v.id); renderSide(); } };
-$('pback').onclick = closePlayer;
+$('pback').onclick = minimizePlayer;
 $('pside').onclick = () => { $('side').hidden = !$('side').hidden; };
 
 let idleT = 0;
-function armIdle() { $('player').classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => $('player').classList.add('idle'), 3000); }
+function armIdle() { if (isMini()) return; $('player').classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => $('player').classList.add('idle'), 3000); }
 $('player').addEventListener('mousemove', armIdle);
 
 function showNextCard(v, done) {
@@ -827,8 +881,8 @@ function staticOn(on) { st = on; cv.hidden = !on; cancelAnimationFrame(raf); if 
 
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') { if (e.key === 'Escape') { e.target.value = ''; goHome(); } return; }
-  if (!$('player').hidden) {
-    if (e.key === 'Escape') closePlayer(); else if (e.key === 'n' || e.key === 'N') step(1, false); else if (e.key === 'p' || e.key === 'P') step(-1, false);
+  if (!$('player').hidden && !isMini()) {
+    if (e.key === 'Escape') minimizePlayer(); else if (e.key === 'n' || e.key === 'N') step(1, false); else if (e.key === 'p' || e.key === 'P') step(-1, false);
     return;
   }
   if (!$('modalwrap').hidden && e.key === 'Escape') return closeDetail();
