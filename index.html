@@ -736,6 +736,7 @@ function begin(withCard) {
 }
 function loadNow(id) {
   clearCard(); staticOn(true);
+  clearTimeout(P.stT); P.stT = setTimeout(() => { const v = cur(); if (v && v.id === id && !P.dead.has(id)) staticOn(false); }, 2500);
   if (!ytReady) { pending = id; return; }
   const p = progress[id]; const start = p && p.t > 30 && p.t < p.d - 60 ? Math.floor(p.t) : 0;
   yt.loadVideoById({ videoId: id, startSeconds: start });
