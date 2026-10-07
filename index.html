@@ -55,6 +55,7 @@ img { display: block; max-width: 100%; }
 .choice .tx b { font-family: var(--f-display); font-weight: 900; font-size: clamp(36px, 7vw, 84px); line-height: .85; text-transform: uppercase; color: var(--ink); }
 .choice .tx span { font-family: var(--f-mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--c); }
 .choice .tx small { color: #ddd; font-size: 15px; }
+.cap .tt { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cap .ar { display: block; font-size: 12px; font-weight: 600; color: var(--amber); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1px; }
 
 /* ---------- nav ---------- */
@@ -94,6 +95,10 @@ img { display: block; max-width: 100%; }
 .bb-title { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: clamp(40px, 6.2vw, 108px); line-height: .86; text-transform: uppercase; text-wrap: balance; overflow-wrap: anywhere; text-shadow: 0 2px 30px rgba(0,0,0,.5); transition: font-size .8s, opacity .8s; }
 .bb-desc { margin: 0; font-size: clamp(15px, 1.25vw, 20px); line-height: 1.35; text-shadow: 0 1px 6px rgba(0,0,0,.6); max-width: 46ch; transition: opacity .8s, max-height .8s; max-height: 8em; overflow: hidden; }
 .billboard.previewing .bb-desc { opacity: 0; max-height: 0; }
+.bb-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; padding-bottom: .04em; }
+.bb-title[data-len="l"] { font-size: clamp(34px, 4.8vw, 84px); }
+.bb-title[data-len="xl"] { font-size: clamp(28px, 3.6vw, 62px); line-height: .92; }
+.billboard.previewing .bb-title[data-len] { font-size: clamp(26px, 3.4vw, 56px); }
 .billboard.previewing .bb-title { font-size: clamp(32px, 4.4vw, 76px); }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn { display: inline-flex; align-items: center; gap: 10px; border: 0; border-radius: 5px; padding: 11px 26px 11px 20px; font-weight: 700; font-size: clamp(15px, 1.2vw, 19px); }
@@ -406,7 +411,8 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 <script>
 /* ================= data ================= */
 const SKATE = (window.SKATE_VIDEOS || []).map(v => ({ ...v, sec: 'skate' }));
-const MUSIC = (window.MUSIC_VIDEOS || []).map(v => ({ ...v, sec: 'music', ch: v.ar, tour: false, a: 0, ry: v.y, live: v.k === 'live' }));
+const MUSIC = (window.MUSIC_VIDEOS || []).map(v => ({ ...v, sec: 'music', ch: v.ar, tour: false, a: 0, ry: v.ry ? v.y : 0, live: v.k === 'live' }));
+const SESSION = /npr|kexp|audiotree|colors/i;
 const BY = Object.fromEntries([...SKATE, ...MUSIC].map(v => [v.id, v]));
 let SEC = 'skate', ALL = SKATE, PLAYABLE = SKATE.filter(v => v.e);
 const $ = id => document.getElementById(id);
@@ -490,20 +496,21 @@ function buildMusicRows() {
   if (ml.length) rows.push({ title: 'My List', items: ml, kind: 'wide' });
   rows.push({ title: 'Hardcore', items: vids.filter(v => v.g === 'Hardcore').sort((a, b) => b.v - a.v), kind: 'wide', more: 'hardcore' });
   rows.push({ title: 'Hip Hop', items: vids.filter(v => v.g === 'Hip Hop').sort((a, b) => b.v - a.v), kind: 'wide', more: 'hiphop' });
-  rows.push({ title: 'Full Sets & Live Sessions', items: ALL.filter(v => v.live).sort((a, b) => b.s - a.s), kind: 'wide', more: 'live' });
-  rows.push({ title: 'Golden Era Hip Hop · 1989–1999', items: vids.filter(v => v.g === 'Hip Hop' && v.y <= 1999).sort((a, b) => a.y - b.y), kind: 'wide' });
-  rows.push({ title: 'Hardcore Classics', items: vids.filter(v => v.g === 'Hardcore' && v.y < 2005).sort((a, b) => a.y - b.y), kind: 'wide' });
-  rows.push({ title: 'Hardcore Live', items: ALL.filter(v => v.live && v.g === 'Hardcore'), kind: 'wide' });
-  rows.push({ title: 'Hip Hop Live', items: ALL.filter(v => v.live && v.g === 'Hip Hop'), kind: 'wide' });
-  Object.entries(groupBy(ALL, v => v.ar)).filter(([, i]) => i.length >= 3).forEach(([ar, items]) => rows.push({ title: `Spotlight: ${ar}`, items, kind: 'wide' }));
-  rows.push({ title: 'New Releases', items: ALL.filter(v => v.y >= 2020).sort((a, b) => b.y - a.y), kind: 'wide' });
+  rows.push({ title: 'Full Sets & Live Sessions', items: ALL.filter(v => v.live).sort((a, b) => b.v - a.v), kind: 'wide', more: 'live' });
+  rows.push({ title: 'Tiny Desk, KEXP & Studio Sessions', items: ALL.filter(v => v.live && SESSION.test(v.src)).sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Golden Era Hip Hop · 1989–1999', items: vids.filter(v => v.g === 'Hip Hop' && v.ry && v.ry >= 1986 && v.ry <= 1999).sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Hardcore Classics', items: vids.filter(v => v.g === 'Hardcore' && v.ry && v.ry < 2005).sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Hardcore Live', items: ALL.filter(v => v.live && v.g === 'Hardcore').sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Hip Hop Live', items: ALL.filter(v => v.live && v.g === 'Hip Hop').sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'New Releases', items: vids.filter(v => v.y >= 2024).sort((a, b) => b.y - a.y || b.v - a.v), kind: 'wide' });
+  shuffle(Object.entries(groupBy(ALL, v => v.ar)).filter(([, i]) => i.length >= 6)).slice(0, 6).forEach(([ar, items]) => rows.push({ title: `Spotlight: ${ar}`, items: items.sort((a, b) => a.live - b.live || b.v - a.v), kind: 'wide' }));
   return rows.filter(r => r.items.length);
 }
 function tileHTML(v, i, kind, bars) {
   const p = progress[v.id]; const pct = bars && p && p.d ? Math.min(100, p.t / p.d * 100) : 0;
   const flag = v.y >= 2026 ? '<span class="flag">New</span>' : '';
   if (kind === 'tall') return `<button class="tile t" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${art(v)}" alt="${esc(v.t)}" ${fb(v.id)}></button>`;
-  return `<button class="tile w ${pct ? 'has-bar' : ''}" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${cover(v.id)}" alt="" ${fb(v.id)}>${flag}<span class="cap">${isM(v) ? `<span class="ar">${esc(v.ar)}</span>` : ''}${esc(v.t)}</span>${pct ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ''}</button>`;
+  return `<button class="tile w ${pct ? 'has-bar' : ''}" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${cover(v.id)}" alt="" ${fb(v.id)}>${flag}<span class="cap">${isM(v) ? `<span class="ar">${esc(v.ar)}</span><span class="tt">${esc(v.t)}</span>` : esc(v.t)}</span>${pct ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ''}</button>`;
 }
 function topHTML(v, i) {
   return `<div class="top-item"><span class="num" aria-hidden="true">${i + 1}</span><button class="tile t" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${art(v)}" alt="${esc(v.t)}" ${fb(v.id)}></button></div>`;
@@ -593,7 +600,7 @@ function setBillboard() {
   bbPick = pool[Math.random() * pool.length | 0] || PLAYABLE[0]; if (!bbPick) return;
   $('bbimg').style.backgroundImage = `url("${cover(bbPick.id)}")`;
   $('bbkicker').innerHTML = isM(bbPick) ? `<b>${esc(bbPick.ar)}</b>· ${esc(bbPick.g)} · ${kindTxt(bbPick)}` : `<b>${esc(bbPick.ch)}</b>${bbPick.a ? '· From the VHS &amp; DVD shelf' : '· ' + kindTxt(bbPick)}`;
-  $('bbtitle').textContent = bbPick.t;
+  $('bbtitle').textContent = bbPick.t; $('bbtitle').dataset.len = bbPick.t.length > 34 ? 'xl' : bbPick.t.length > 18 ? 'l' : '';
   $('bbdesc').textContent = blurb(bbPick);
   $('bbbadge').textContent = `${mins(bbPick.s)}${yearOf(bbPick) ? ' · ' + yearOf(bbPick) : ''}`;
 }
@@ -681,7 +688,7 @@ function showPage(view) {
   if (view === 'home') return goHome();
   if (view === 'hardcore') return showGrid('Hardcore', ALL.filter(v => v.g === 'Hardcore').sort((a, b) => (a.live - b.live) || b.v - a.v));
   if (view === 'hiphop') return showGrid('Hip Hop', ALL.filter(v => v.g === 'Hip Hop').sort((a, b) => (a.live - b.live) || b.v - a.v));
-  if (view === 'live') return showGrid('Full Sets & Live Sessions', ALL.filter(v => v.live).sort((a, b) => b.s - a.s));
+  if (view === 'live') return showGrid('Full Sets & Live Sessions', ALL.filter(v => v.live).sort((a, b) => b.v - a.v));
   if (view === 'artists') return showGrid('Artists', [], chipsHTML());
   if (view === 'full') return showGrid('Full-Length', ALL.filter(v => !v.tour).sort((a, b) => b.v - a.v));
   if (view === 'tours') return showGrid('Tour Videos', ALL.filter(v => v.tour));
