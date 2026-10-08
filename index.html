@@ -1107,6 +1107,7 @@ function scopeEl() {
 function candidates(scope) {
   return [...scope.querySelectorAll(FOCUSABLE)].filter(el => {
     if (el.matches('.handle, .explore, .mini-hit, #bob *') || el.closest('.bob')) return false;
+    if (el.id === 'q' && !$('searchbox').classList.contains('open')) return false;
     if (scope === document.body && (el.closest('#player:not(.mini)') || el.closest('#modalwrap') || el.closest('#chooser'))) return false;
     if (el.closest('#player.mini') && !el.matches('.mini-b')) return false;
     if (el.closest('#player') && !el.closest('#player.mini') && el.closest('.tvbar') && !TV) return false;
@@ -1274,6 +1275,10 @@ document.addEventListener('keydown', e => {
   if (inInput) {
     if (k === 'back' || (k === 'up')) { e.preventDefault(); if (k === 'back' && t.value) { t.value = ''; goHome(); } t.blur(); $('searchbox').classList.remove('open'); focusEl($('searchbtn')); }
     else if (k === 'down' || k === 'ok') { const f = $('page').querySelector('.tile'); if (f) { e.preventDefault(); t.blur(); focusEl(f); } }
+    else if ((k === 'right' && (TV || t.selectionStart >= t.value.length)) || (k === 'left' && (TV || t.selectionEnd === 0))) {
+      e.preventDefault(); const nxt = k === 'right' ? $('livebtn') : $('searchbtn');
+      if (!t.value) $('searchbox').classList.remove('open'); t.blur(); focusEl(nxt);
+    }
     return;
   }
   if (k === 'back') { e.preventDefault(); back(); return; }
