@@ -149,7 +149,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 .pager i { width: 12px; height: 2px; background: #4d4d4d; }
 .pager i.on { background: #aaa; }
 .slider { position: relative; min-width: 0; }
-.track { display: grid; grid-auto-flow: column; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 var(--gutter); padding: 0 var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+.track { display: grid; grid-auto-flow: column; gap: 8px; overflow-x: auto; overflow-y: hidden; touch-action: pan-x pan-y; scroll-snap-type: x mandatory; scroll-padding: 0 var(--gutter); padding: 0 var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
 .track::-webkit-scrollbar { display: none; }
 .track.wide { grid-auto-columns: calc((100vw - 2 * var(--gutter) - 5 * 8px) / 6); }
 .track.tall { grid-auto-columns: calc((100vw - 2 * var(--gutter) - 6 * 8px) / 7); }
