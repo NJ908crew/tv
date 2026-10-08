@@ -66,6 +66,28 @@ img { display: block; max-width: 100%; }
 .logo { font-family: var(--f-display); font-weight: 900; font-size: 28px; letter-spacing: .02em; text-transform: uppercase; line-height: .9; white-space: nowrap; background: none; border: 0; padding: 0; }
 .logo b { color: var(--amber); font-weight: 900; }
 .logo .lg-short { display: none; }
+.menu-btn { display: none; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255,255,255,.08); padding: 0; flex: none; }
+.menu-btn path { transition: transform .25s ease, opacity .2s; transform-origin: 12px 12px; }
+.menu-btn[aria-expanded="true"] .l1 { transform: translateY(5px) rotate(45deg); }
+.menu-btn[aria-expanded="true"] .l2 { opacity: 0; }
+.menu-btn[aria-expanded="true"] .l3 { transform: translateY(-5px) rotate(-45deg); }
+.mmenu { position: fixed; inset: 0; z-index: 39; background: var(--bg); overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 84px) var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 28px); display: flex; flex-direction: column; gap: 28px; animation: mmIn .22s ease-out; }
+@keyframes mmIn { from { opacity: 0; } }
+.mm-search { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--bg-2); }
+.mm-search:focus-within { border-color: var(--ink); }
+.mm-search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--ink); font: inherit; font-size: 17px; }
+.mm-links { display: grid; gap: 2px; }
+.mm-links button { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 12px 0; text-align: left; font-family: var(--f-display); font-weight: 900; font-size: 44px; line-height: .95; text-transform: uppercase; color: var(--ink); animation: bIn .3s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.mm-links button small { font-family: var(--f-mono); font-weight: 400; font-size: 12px; letter-spacing: .1em; color: var(--dim); }
+.mm-links button.on { color: var(--amber); }
+.mm-links button:active { color: var(--amber); }
+.mm-foot { display: grid; gap: 10px; margin-top: auto; }
+.mm-live, .mm-np { display: flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 8px; padding: 14px; font-weight: 800; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; }
+.mm-live { background: var(--ink); color: #000; }
+.mm-live i { width: 9px; height: 9px; border-radius: 50%; background: var(--rec); box-shadow: 0 0 10px var(--rec); animation: pulse 2s infinite; }
+.mm-live span { font-family: var(--f-mono); font-weight: 400; letter-spacing: .06em; opacity: .6; }
+.mm-np { background: var(--amber); color: var(--amber-ink); }
+.mm-np .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; } .mm-np .eq i { width: 3px; background: currentColor; animation: eq 1s ease-in-out infinite; } .mm-np .eq i:nth-child(2) { animation-delay: -.4s; } .mm-np .eq i:nth-child(3) { animation-delay: -.7s; }
 .links { display: flex; gap: 20px; font-size: 15px; color: #d6d2ca; }
 .links button { background: none; border: 0; padding: 4px 0; color: inherit; font-weight: 500; }
 .links button.on { color: var(--ink); font-weight: 700; }
@@ -314,6 +336,13 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .nav { gap: 10px 12px; }
   .logo { font-size: 24px; }
   .logo .lg-full { display: none; } .logo .lg-short { display: inline; }
+  .nav { flex-wrap: nowrap; padding-bottom: 14px; }
+  .nav::before { display: none; }
+  .nav .links, .nav .search, .nav .live-btn, .nav .np-btn { display: none !important; }
+  .sec-switch { order: 0; margin-left: auto; }
+  .nav .spacer { display: none; }
+  .menu-btn { display: grid; }
+  .page { padding-top: 90px; }
   .search.open input { width: 120px; }
   .nav.searching .logo, .nav.searching .np-btn { display: none; }
   .nav.searching .search { flex: 1; min-width: 0; }
@@ -322,7 +351,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .sec-switch button { font-size: 12px; padding: 5px 10px; }
   .np-btn { font-size: 12px; padding: 5px 10px; }
   .billboard { height: calc(82vh + 40px); min-height: 560px; }
-  .bb-media::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.3); pointer-events: none; }
+  .bb-media::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.5); pointer-events: none; }
   .bb-copy { left: var(--gutter); right: var(--gutter); width: auto; bottom: 18%; }
   .bb-side { bottom: calc(18% + 8px); }
   .badge-tab { display: none; }
@@ -501,6 +530,7 @@ html.tv .mini-hit { pointer-events: none; }
 <nav class="nav" id="nav">
   <button class="logo" id="home" aria-label="OutofStep.tv home"><span class="lg-full">OutofStep</span><span class="lg-short">OOS</span><b>.tv</b></button>
   <div class="sec-switch" id="secswitch" role="tablist" aria-label="Section"><button data-sec="skate" role="tab">Skate</button><button data-sec="music" role="tab">Music</button></div>
+  <button class="menu-btn" id="menubtn" aria-label="Open menu" aria-expanded="false" aria-controls="mmenu"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path class="l1" d="M4 7h16"/><path class="l2" d="M4 12h16"/><path class="l3" d="M4 17h16"/></svg></button>
   <div class="links" id="links"></div>
   <div class="spacer"></div>
   <div class="search" id="searchbox">
@@ -601,6 +631,17 @@ html.tv .mini-hit { pointer-events: none; }
   </aside>
 </section>
 
+<div class="mmenu" id="mmenu" hidden role="dialog" aria-modal="true" aria-label="Menu">
+  <form class="mm-search" id="mmsearch" role="search">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+    <input id="mq" type="search" placeholder="Search titles, brands, artists" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+  </form>
+  <nav class="mm-links" id="mmlinks" aria-label="Sections"></nav>
+  <div class="mm-foot">
+    <button class="mm-np" id="mmnp" hidden><span class="eq"><i></i><i></i><i></i></span>Back to Now Playing</button>
+    <button class="mm-live" id="mmlive"><i></i>Watch Live<span id="mmch"></span></button>
+  </div>
+</div>
 <div class="tv-toast" id="tvtoast" hidden></div>
 <div class="chooser" id="chooser" hidden>
   <div class="in">
@@ -920,6 +961,22 @@ function showPage(view) {
   if (view === 'mylist') return showGrid('My List', myList.map(id => BY[id]).filter(v => v && v.sec === SEC));
 }
 $('links').onclick = e => { const b = e.target.closest('button'); if (b) showPage(b.dataset.view); };
+/* ---- phone menu ---- */
+const menuOpen = () => !$('mmenu').hidden;
+function renderMenu() {
+  const cur = (document.querySelector('#links button.on') || {}).dataset?.view || 'home';
+  const count = { home: '', hardcore: ALL.filter(v => v.g === 'Hardcore').length, hiphop: ALL.filter(v => v.g === 'Hip Hop').length, live: ALL.filter(v => v.live).length, artists: Object.keys(groupBy(ALL, v => v.ch)).length, full: ALL.filter(v => !v.tour).length, tours: ALL.filter(v => v.tour).length, boxart: ALL.filter(v => v.a).length, brands: Object.keys(groupBy(ALL, v => v.ch)).length, mylist: myList.map(id => BY[id]).filter(v => v && v.sec === SEC).length };
+  $('mmlinks').innerHTML = NAV[SEC].map(([v, l], i) => `<button data-view="${v}" class="${v === cur ? 'on' : ''}" style="--i:${i}">${esc(l)}<small>${count[v] ? count[v] : ''}</small></button>`).join('');
+  $('mmch').textContent = '· ' + CH(); $('mmnp').hidden = !isMini();
+}
+function openMenu() { renderMenu(); $('mmenu').hidden = false; $('menubtn').setAttribute('aria-expanded', 'true'); $('menubtn').setAttribute('aria-label', 'Close menu'); document.body.classList.add('lock'); stopPreview(); pushLayer(); }
+function closeMenu() { if (!menuOpen()) return; $('mmenu').hidden = true; $('menubtn').setAttribute('aria-expanded', 'false'); $('menubtn').setAttribute('aria-label', 'Open menu'); $('mq').blur(); if ($('player').hidden || isMini()) document.body.classList.remove('lock'); }
+$('menubtn').onclick = () => menuOpen() ? back() : openMenu();
+$('mmlinks').onclick = e => { const b = e.target.closest('button'); if (!b) return; closeMenu(); showPage(b.dataset.view); };
+$('mmsearch').onsubmit = e => { e.preventDefault(); const q = $('mq').value.trim(); if (!q) return; closeMenu(); $('q').value = q; $('searchbox').classList.add('open'); $('q').dispatchEvent(new Event('input')); $('mq').value = ''; };
+$('mmlive').onclick = () => { closeMenu(); $('livebtn').click(); };
+$('mmnp').onclick = () => { closeMenu(); expandPlayer(); };
+window.addEventListener('resize', () => { if (menuOpen() && innerWidth > 620) closeMenu(); });
 $('home').onclick = goHome;
 $('searchbtn').onclick = () => { $('searchbox').classList.add('open'); $('nav').classList.add('searching'); $('q').focus(); };
 let qT;
@@ -1118,6 +1175,7 @@ function setSection(sec, first) {
   $('links').innerHTML = NAV[SEC].map(([v, l]) => `<button data-view="${v}">${esc(l)}</button>`).join('');
   $('chooser').hidden = true;
   stopPreview(); setBillboard(); goHome();
+  if (menuOpen()) renderMenu();
   if (!first) buildIn();
   if (!first && bbReady) bbTimer = setTimeout(startPreview, 2600);
 }
@@ -1257,6 +1315,7 @@ function pushLayer() { try { history.pushState({ oos: Date.now() }, ''); } catch
 function doBack() {
   const a = document.activeElement;
   if (a && a.tagName === 'INPUT') { a.blur(); ($('searchbox').classList.remove('open'), $('nav').classList.remove('searching')); focusEl($('searchbtn')); return true; }
+  if (menuOpen()) { closeMenu(); return true; }
   if (!$('chooser').hidden) { if (store.get('sec', null)) { $('chooser').hidden = true; focusEl(defaultFocus(scopeEl())); return true; } return false; }
   if (fullPlayer()) { if (TV && $('side').classList.contains('tv-open')) { toggleQueue(false); return true; } minimizePlayer(); return true; }
   if (!$('modalwrap').hidden) { closeDetail(); restoreFocus(); return true; }
@@ -1310,6 +1369,7 @@ document.addEventListener('keydown', e => {
   if (!k) { if (!inInput && e.key === '/') { e.preventDefault(); $('searchbtn').click(); } else if (fullPlayer() && !inInput) { if (e.key === 'n' || e.key === 'N') step(1, false); else if (e.key === 'p' || e.key === 'P') step(-1, false); } return; }
   // media keys work everywhere a video is loaded
   if (['pp', 'play', 'pause', 'stop', 'ff', 'rw', 'next', 'prev'].includes(k)) { if (!$('player').hidden) { e.preventDefault(); mediaKey(k); } return; }
+  if (inInput && t.id !== 'q') { if (k === 'back') { e.preventDefault(); back(); } return; }
   if (inInput) {
     if (k === 'back' || (k === 'up')) { e.preventDefault(); if (k === 'back' && t.value) { t.value = ''; goHome(); } t.blur(); ($('searchbox').classList.remove('open'), $('nav').classList.remove('searching')); focusEl($('searchbtn')); }
     else if (k === 'down' || k === 'ok') { const f = $('page').querySelector('.tile'); if (f) { e.preventDefault(); t.blur(); focusEl(f); } }
