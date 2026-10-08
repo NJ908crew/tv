@@ -324,10 +324,12 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .sec-switch button { padding: 5px 10px; }
   .page { padding-top: 130px; }
   .player { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  .stage { place-items: start stretch; }
-  .frame { max-width: 100%; }
+  .stage { display: block; }
+  .frame { width: 100%; max-width: 100%; max-height: none; aspect-ratio: 16 / 9; }
   .side { width: auto; border-left: 0; border-top: 1px solid var(--line); }
-  .p-top { position: relative; background: #000; padding-bottom: 12px; }
+  .p-top { position: relative; background: #000; padding-bottom: 12px; width: 100%; }
+  .p-top .tt { flex: 1; min-width: 0; }
+  .p-top .grow { display: none; }
   .player.idle .p-top { opacity: 1; }
   .m-body { grid-template-columns: minmax(0, 1fr); }
   .m-hero .copy { left: 20px; right: 20px; bottom: 20px; }
@@ -365,6 +367,14 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .top-item .tile { width: 34vw; height: auto; aspect-ratio: 2/3; }
   .handle { display: none; }
   .next-card .art { display: none; }
+}
+/* phone held sideways: video fills the screen, scaled to fit, controls float over it */
+@media (orientation: landscape) and (max-height: 520px) {
+  .player:not(.mini) { display: block; overflow-y: auto; }
+  .player:not(.mini) .stage { display: grid; place-items: center; height: 100vh; height: 100dvh; }
+  .player:not(.mini) .frame { width: min(100vw, calc(100vh * 16 / 9)); width: min(100vw, calc(100dvh * 16 / 9)); max-height: none; }
+  .player:not(.mini) .p-top { position: absolute; background: linear-gradient(180deg, rgba(0,0,0,.85), rgba(0,0,0,0)); }
+  .player.idle:not(.mini) .p-top { opacity: 0; }
 }
 @media (max-width: 360px) { .logo { font-size: 19px; } .sec-switch button { font-size: 11px; padding: 5px 8px; } .nav { gap: 10px 8px; } .live-btn { font-size: 13px; } }
 @media (hover: none) { .bob { display: none; } }
