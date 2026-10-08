@@ -586,7 +586,7 @@ html.tv .mini-hit { pointer-events: none; }
 /* ================= device ================= */
 const TV = (() => {
   const q = new URLSearchParams(location.search).get('tv');
-  if (q === '1' || q === '0') { try { localStorage.setItem('stv-tv', q); } catch (e) {} }
+  try { if (q === '1' || q === '0') localStorage.setItem('stv-tv', q); else if (q === 'auto') localStorage.removeItem('stv-tv'); } catch (e) {}
   let f = null; try { f = localStorage.getItem('stv-tv'); } catch (e) {}
   if (f === '1') return true; if (f === '0') return false;
   return /SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|AFT[A-Z0-9]|BRAVIA|Android TV|GoogleTV|Google TV|CrKey|HbbTV|PhilipsTV|VIDAA|Hisense|AppleTV|Roku/i.test(navigator.userAgent);
