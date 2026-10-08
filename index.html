@@ -550,10 +550,12 @@ html.tv .mini-b { width: 2.4vw; height: 2.4vw; } html.tv .mini-b svg { width: 1.
 html.tv .mini-hit { pointer-events: none; }
 .row.rv { opacity: 0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
 .row.rv.in { opacity: 1; transform: none; }
+.row.rv .track > * { opacity: 0; transform: translateX(18px); transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1); transition-delay: 0s; }
+.row.rv.in .track > * { opacity: 1; transform: none; transition-delay: calc(var(--d, 0) * 45ms + 80ms); }
 html { scroll-behavior: smooth; }
 .track { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
-  .row.rv { opacity: 1; transform: none; }
+  .row.rv, .row.rv .track > * { opacity: 1; transform: none; }
   html, .track { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -831,13 +833,12 @@ function renderRows() {
   revealRows();
 }
 /* rows fade up as they scroll into view */
-const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); rowIO.unobserve(en.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: .08 }) : null;
+const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(en => en.target.classList.toggle('in', en.isIntersecting)), { rootMargin: '0px 0px -6% 0px', threshold: 0 }) : null;
 function revealRows() {
   if (!rowIO || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.querySelectorAll('#rows .row').forEach(r => {
-    const top = r.getBoundingClientRect().top;
-    if (top < innerHeight * .92) return; // already on screen: show right away
-    r.classList.add('rv'); rowIO.observe(r);
+    r.classList.add('rv'); rowIO.observe(r); // re-animates every time the row comes back into view
+    const tr = r.querySelector('.track'); if (tr) [...tr.children].forEach((t, c) => t.style.setProperty('--d', Math.min(c, 7)));
   });
 }
 /* eased wheel scrolling (mouse/trackpad on desktop only; touch and TV keep native scrolling) */
