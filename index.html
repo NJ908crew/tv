@@ -329,6 +329,10 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .side { width: auto; border-left: 0; border-top: 1px solid var(--line); }
   .p-top { position: relative; background: #000; padding-bottom: 12px; width: 100%; }
   .p-top .tt { flex: 1; min-width: 0; }
+  .side-head { min-width: 0; }
+  .pills { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-padding: 0 18px; }
+  .pills::-webkit-scrollbar { display: none; }
+  .pill { flex: none; white-space: nowrap; }
   .p-top .grow { display: none; }
   .player.idle .p-top { opacity: 1; }
   .m-body { grid-template-columns: minmax(0, 1fr); }
