@@ -346,14 +346,25 @@ html.kb .sec-switch button:focus { outline: 3px solid var(--ink); outline-offset
 .more-tile:hover { border-color: var(--ink); }
 /* TV control bar (only shown in TV mode) */
 .tvbar { display: none; }
+.np-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--amber); color: var(--amber-ink); font-weight: 800; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; padding: 6px 14px; white-space: nowrap; }
+.np-btn .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.np-btn .eq i { width: 3px; background: currentColor; animation: eq 1s ease-in-out infinite; }
+.np-btn .eq i:nth-child(2) { animation-delay: -.4s; } .np-btn .eq i:nth-child(3) { animation-delay: -.7s; }
+@keyframes eq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+html.kb .np-btn:focus { outline: 3px solid var(--ink); outline-offset: 4px; transform: scale(1.06); }
+.tv-toast { position: fixed; left: 5vw; bottom: 6vh; z-index: 66; max-width: 46vw; background: rgba(20,22,25,.96); border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 6px; padding: 14px 18px; font-size: 16px; line-height: 1.35; box-shadow: 0 12px 40px rgba(0,0,0,.6); animation: miniIn .3s ease-out; }
+.tv-toast b { color: var(--amber); }
+html.tv .np-btn { font-size: .9vw; padding: .4vw .9vw; gap: .45vw; }
+html.tv .np-btn .eq { height: .9vw; gap: .15vw; } html.tv .np-btn .eq i { width: .22vw; }
+html.tv .tv-toast { font-size: 1.15vw; padding: 1vw 1.4vw; border-left-width: .3vw; }
 
 /* ---------- TV mode: 10-foot layout, title-safe area, remote focus ---------- */
 html.tv { --gutter: 5vw; }
 html.tv body { font-size: 1.15vw; }
 html.tv .bob, html.tv .handle { display: none !important; }
-html.tv .nav { padding: 4vh var(--gutter) 2.6vh; gap: 2.2vw; }
-html.tv .logo { font-size: 2.3vw; }
-html.tv .links { font-size: 1.2vw; gap: 1.7vw; white-space: nowrap; }
+html.tv .nav { padding: 4vh var(--gutter) 2.6vh; gap: 1.4vw; }
+html.tv .logo { font-size: 2.1vw; }
+html.tv .links { font-size: 1.2vw; gap: 1.3vw; white-space: nowrap; }
 html.tv .row-head .explore { display: none; }
 html.tv .links button { padding: .3vw .2vw; }
 html.tv .sec-switch { padding: .25vw; }
@@ -478,6 +489,7 @@ html.tv .mini-hit { pointer-events: none; }
     <button id="searchbtn" aria-label="Search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
     <input id="q" type="search" placeholder="Titles, brands, artists" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </div>
+  <button class="np-btn" id="npbtn" hidden><span class="eq"><i></i><i></i><i></i></span><span>Now Playing</span></button>
   <button class="live-btn" id="livebtn"><i></i><span>Live</span></button>
 </nav>
 
@@ -571,6 +583,7 @@ html.tv .mini-hit { pointer-events: none; }
   </aside>
 </section>
 
+<div class="tv-toast" id="tvtoast" hidden></div>
 <div class="chooser" id="chooser" hidden>
   <div class="in">
     <div class="lg">OutofStep<b>.tv</b></div>
@@ -935,7 +948,7 @@ function playFrom(list, v, title = 'Up next', live = false) {
   P.q = list.filter(x => x.e); P.i = v ? Math.max(0, P.q.indexOf(v)) : 0;
   P.title = title; P.live = live; P.dead.clear();
   stopPreview(); hideBob(); closeDetail();
-  $('player').classList.remove('mini', 'paused'); clearInterval(P.miniT);
+  $('player').classList.remove('mini', 'paused'); clearInterval(P.miniT); $('npbtn').hidden = true; hideToast();
   $('player').hidden = false; document.body.classList.add('lock');
   $('pkicker').textContent = live ? '● Live · ' + CH() : title;
   begin(false); armIdle();
@@ -986,23 +999,29 @@ function minimizePlayer() {
   saveProg(); clearTimeout(idleT); $('player').classList.remove('idle');
   $('player').classList.add('mini'); document.body.classList.remove('lock');
   syncMini(); miniTick(); clearInterval(P.miniT); P.miniT = setInterval(miniTick, 1000);
+  if (TV) { $('npbtn').hidden = false; tvToast('The video keeps playing. To go back to it, press <b>▲ Up</b> to the top and select <b>Now Playing</b>, or move down to the mini player.'); }
   if (!$('homeview').hidden) renderRows();
   restoreFocus();
 }
 function expandPlayer() {
   if (!isMini()) return;
+  $('npbtn').hidden = true; hideToast();
   $('player').classList.remove('mini', 'paused'); clearInterval(P.miniT);
   rememberFocus(); pushLayer();
   stopPreview(); hideBob(); closeDetail(); document.body.classList.add('lock'); armIdle();
   if (TV) setTimeout(() => { focusEl($('tvplay')); syncTV(); }, 60);
 }
 $('minihit').onclick = expandPlayer;
+$('npbtn').onclick = expandPlayer;
+let toastT = 0;
+function tvToast(html) { const t = $('tvtoast'); if (store.get('np-tip', 0) >= 3) return; store.set('np-tip', store.get('np-tip', 0) + 1); t.innerHTML = html; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(hideToast, 6000); }
+function hideToast() { clearTimeout(toastT); $('tvtoast').hidden = true; }
 $('miniexp').onclick = e => { e.stopPropagation(); expandPlayer(); };
 $('miniplay').onclick = e => { e.stopPropagation(); if (!yt) return; try { yt.getPlayerState() === 1 ? yt.pauseVideo() : yt.playVideo(); } catch (er) {} setTimeout(syncMini, 150); };
 $('miniclose').onclick = e => { e.stopPropagation(); closePlayer(); };
 function closePlayer() {
   saveProg(); clearInterval(P.save); clearInterval(P.miniT); clearCard(); try { yt && yt.stopVideo(); } catch (e) {}
-  $('player').classList.remove('mini', 'paused');
+  $('player').classList.remove('mini', 'paused'); $('npbtn').hidden = true; hideToast();
   $('player').hidden = true; document.body.classList.remove('lock');
   if (!$('homeview').hidden) { renderRows(); }
 }
