@@ -306,6 +306,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .search.open input { width: 120px; }
   .live-btn span { display: none; }
   .billboard { height: 82vh; min-height: 520px; }
+  .bb-media::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.3); pointer-events: none; }
   .bb-copy { left: var(--gutter); right: var(--gutter); width: auto; bottom: 18%; }
   .bb-side { bottom: calc(18% + 8px); }
   .badge-tab { display: none; }
