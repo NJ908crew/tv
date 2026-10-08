@@ -539,7 +539,13 @@ html.tv .player.mini .mini-bar { opacity: 1; padding: 2vw .6vw .6vw 1vw; gap: .4
 html.tv .mini-tt small { font-size: .75vw; } html.tv .mini-tt b { font-size: 1vw; }
 html.tv .mini-b { width: 2.4vw; height: 2.4vw; } html.tv .mini-b svg { width: 1.2vw; height: 1.2vw; }
 html.tv .mini-hit { pointer-events: none; }
+.row.rv { opacity: 0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+.row.rv.in { opacity: 1; transform: none; }
+html { scroll-behavior: smooth; }
+.track { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
+  .row.rv { opacity: 1; transform: none; }
+  html, .track { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 </style>
@@ -809,7 +815,39 @@ function renderRows() {
       </div></section>`;
   }).join('');
   document.querySelectorAll('.track').forEach(t => t.addEventListener('scroll', () => syncPager(t), { passive: true }));
+  revealRows();
 }
+/* rows fade up as they scroll into view */
+const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); rowIO.unobserve(en.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: .08 }) : null;
+function revealRows() {
+  if (!rowIO || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('#rows .row').forEach(r => {
+    const top = r.getBoundingClientRect().top;
+    if (top < innerHeight * .92) return; // already on screen: show right away
+    r.classList.add('rv'); rowIO.observe(r);
+  });
+}
+/* eased wheel scrolling (mouse/trackpad on desktop only; touch and TV keep native scrolling) */
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  let target = null, raf = 0;
+  const maxY = () => document.documentElement.scrollHeight - innerHeight;
+  const tick = () => {
+    const y = scrollY, d = target - y;
+    if (Math.abs(d) < .6) { window.scrollTo({ top: target, behavior: 'instant' }); target = null; raf = 0; return; }
+    window.scrollTo({ top: y + d * .14, behavior: 'instant' }); raf = requestAnimationFrame(tick);
+  };
+  addEventListener('wheel', e => {
+    if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY) || document.body.classList.contains('lock')) return;
+    for (let el = e.target; el && el !== document.body; el = el.parentElement) { if (el.scrollHeight > el.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(el).overflowY)) return; }
+    e.preventDefault();
+    const dy = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * innerHeight : e.deltaY;
+    target = Math.max(0, Math.min(maxY(), (target ?? scrollY) + dy));
+    if (!raf) raf = requestAnimationFrame(tick);
+  }, { passive: false });
+  addEventListener('keydown', () => { if (raf) { cancelAnimationFrame(raf); raf = 0; target = null; } });
+  addEventListener('mousedown', () => { if (raf) { cancelAnimationFrame(raf); raf = 0; target = null; } });
+})();
 function syncPager(t) {
   const row = t.closest('.row'); const dots = row.querySelectorAll('.pager i'); const max = t.scrollWidth - t.clientWidth;
   const frac = max > 0 ? t.scrollLeft / max : 0; const k = Math.round(frac * (dots.length - 1));
