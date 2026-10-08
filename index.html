@@ -65,6 +65,7 @@ img { display: block; max-width: 100%; }
 .nav.solid { background: var(--bg); }
 .logo { font-family: var(--f-display); font-weight: 900; font-size: 28px; letter-spacing: .02em; text-transform: uppercase; line-height: .9; white-space: nowrap; background: none; border: 0; padding: 0; }
 .logo b { color: var(--amber); font-weight: 900; }
+.logo .lg-short { display: none; }
 .links { display: flex; gap: 20px; font-size: 15px; color: #d6d2ca; }
 .links button { background: none; border: 0; padding: 4px 0; color: inherit; font-weight: 500; }
 .links button.on { color: var(--ink); font-weight: 700; }
@@ -311,7 +312,8 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 }
 @media (max-width: 620px) {
   .nav { gap: 10px 12px; }
-  .logo { font-size: 22px; }
+  .logo { font-size: 24px; }
+  .logo .lg-full { display: none; } .logo .lg-short { display: inline; }
   .search.open input { width: 120px; }
   .nav.searching .logo, .nav.searching .np-btn { display: none; }
   .nav.searching .search { flex: 1; min-width: 0; }
@@ -497,7 +499,7 @@ html.tv .mini-hit { pointer-events: none; }
 </head>
 <body>
 <nav class="nav" id="nav">
-  <button class="logo" id="home" aria-label="OutofStep.tv home">OutofStep<b>.tv</b></button>
+  <button class="logo" id="home" aria-label="OutofStep.tv home"><span class="lg-full">OutofStep</span><span class="lg-short">OOS</span><b>.tv</b></button>
   <div class="sec-switch" id="secswitch" role="tablist" aria-label="Section"><button data-sec="skate" role="tab">Skate</button><button data-sec="music" role="tab">Music</button></div>
   <div class="links" id="links"></div>
   <div class="spacer"></div>
