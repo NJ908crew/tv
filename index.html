@@ -106,7 +106,8 @@ img { display: block; max-width: 100%; }
 
 /* ---------- billboard ---------- */
 .billboard { position: relative; height: 56.25vw; max-height: 92vh; min-height: 540px; overflow: hidden; }
-.bb-media { position: absolute; inset: 0; }
+.bb-media { position: absolute; inset: 0; will-change: transform; transform-origin: center top; }
+.bb-copy, .bb-side { will-change: transform, opacity; }
 .bb-img { position: absolute; inset: 0; background-size: cover; background-position: center 25%; transition: opacity 1s; }
 .bb-video { position: absolute; left: 50%; top: 50%; width: max(100%, calc(100vh * 16 / 9 * 1.2)); aspect-ratio: 16/9; transform: translate(-50%, -50%) scale(1.18); opacity: 0; transition: opacity 1.2s; pointer-events: none; }
 .bb-video.on { opacity: 1; }
@@ -862,6 +863,23 @@ function revealRows() {
   }, { passive: false });
   addEventListener('keydown', () => { if (raf) { cancelAnimationFrame(raf); raf = 0; target = null; } });
   addEventListener('mousedown', () => { if (raf) { cancelAnimationFrame(raf); raf = 0; target = null; } });
+})();
+/* hero parallax: picture drifts slower than the page, text lifts and fades */
+(() => {
+  if (TV || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const media = document.querySelector('.bb-media'), copy = document.querySelector('.bb-copy'), side = document.querySelector('.bb-side');
+  let raf = 0;
+  const apply = () => {
+    raf = 0; if ($('homeview').hidden) return;
+    const H = $('billboard').offsetHeight, y = Math.min(Math.max(scrollY, 0), H);
+    const k = y / H;
+    media.style.transform = `translate3d(0, ${y * 0.45}px, 0) scale(${1 + k * 0.08})`;
+    copy.style.transform = `translate3d(0, ${-y * 0.18}px, 0)`;
+    copy.style.opacity = String(Math.max(0, 1 - k * 1.6));
+    side.style.opacity = String(Math.max(0, 1 - k * 1.6));
+  };
+  addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(apply); }, { passive: true });
+  addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(apply); });
 })();
 function syncPager(t) {
   const row = t.closest('.row'); const dots = row.querySelectorAll('.pager i'); const max = t.scrollWidth - t.clientWidth;
