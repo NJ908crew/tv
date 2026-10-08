@@ -589,7 +589,7 @@ const TV = (() => {
   try { if (q === '1' || q === '0') localStorage.setItem('stv-tv', q); else if (q === 'auto') localStorage.removeItem('stv-tv'); } catch (e) {}
   let f = null; try { f = localStorage.getItem('stv-tv'); } catch (e) {}
   if (f === '1') return true; if (f === '0') return false;
-  return /SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|AFT[A-Z0-9]|BRAVIA|Android TV|GoogleTV|Google TV|CrKey|HbbTV|PhilipsTV|VIDAA|Hisense|AppleTV|Roku/i.test(navigator.userAgent);
+  return /OutofStepTV|SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|AFT[A-Z0-9]|BRAVIA|Android TV|GoogleTV|Google TV|CrKey|HbbTV|PhilipsTV|VIDAA|Hisense|AppleTV|Roku/i.test(navigator.userAgent);
 })();
 if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= data ================= */
@@ -1254,6 +1254,15 @@ $('tvq').onclick = () => toggleQueue();
 $('tvlist').onclick = () => { const v = cur(); if (v) { toggleList(v.id); renderSide(); syncTV(); } };
 if (TV) { setInterval(() => { if (fullPlayer() && !$('player').classList.contains('idle')) tvTick(); }, 500); }
 
+function mediaKey(k) {
+  if ($('player').hidden) return false;
+  if (k === 'pp') togglePlay(); else if (k === 'play') { try { yt.playVideo(); } catch (er) {} } else if (k === 'pause') { try { yt.pauseVideo(); } catch (er) {} }
+  else if (k === 'stop') closePlayer(); else if (k === 'ff') seek(30); else if (k === 'rw') seek(-30); else if (k === 'next') step(1, false); else if (k === 'prev') step(-1, false);
+  if (fullPlayer() && TV) showBar(); setTimeout(syncTV, 200); return true;
+}
+// Hooks for the Android TV / Fire TV app: the remote's Back and media buttons land here.
+window.__tvKey = k => mediaKey(k);
+window.__tvBack = () => { if (history.state && history.state.oos) { history.back(); return true; } return doBack(); };
 /* ---- key handling ---- */
 document.addEventListener('keydown', e => {
   let k = KEYNAME[e.key] || KEYMAP[e.keyCode];
@@ -1261,12 +1270,7 @@ document.addEventListener('keydown', e => {
   if (!k && e.key === 'Backspace' && !inInput) k = 'back';
   if (!k) { if (!inInput && e.key === '/') { e.preventDefault(); $('searchbtn').click(); } else if (fullPlayer() && !inInput) { if (e.key === 'n' || e.key === 'N') step(1, false); else if (e.key === 'p' || e.key === 'P') step(-1, false); } return; }
   // media keys work everywhere a video is loaded
-  if (['pp', 'play', 'pause', 'stop', 'ff', 'rw', 'next', 'prev'].includes(k) && !$('player').hidden) {
-    e.preventDefault();
-    if (k === 'pp') togglePlay(); else if (k === 'play') { try { yt.playVideo(); } catch (er) {} } else if (k === 'pause') { try { yt.pauseVideo(); } catch (er) {} }
-    else if (k === 'stop') closePlayer(); else if (k === 'ff') seek(30); else if (k === 'rw') seek(-30); else if (k === 'next') step(1, false); else if (k === 'prev') step(-1, false);
-    if (fullPlayer() && TV) showBar(); setTimeout(syncTV, 200); return;
-  }
+  if (['pp', 'play', 'pause', 'stop', 'ff', 'rw', 'next', 'prev'].includes(k)) { if (!$('player').hidden) { e.preventDefault(); mediaKey(k); } return; }
   if (inInput) {
     if (k === 'back' || (k === 'up')) { e.preventDefault(); if (k === 'back' && t.value) { t.value = ''; goHome(); } t.blur(); $('searchbox').classList.remove('open'); focusEl($('searchbtn')); }
     else if (k === 'down' || k === 'ok') { const f = $('page').querySelector('.tile'); if (f) { e.preventDefault(); t.blur(); focusEl(f); } }
