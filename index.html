@@ -91,7 +91,7 @@ img { display: block; max-width: 100%; }
   linear-gradient(77deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.25) 45%, rgba(0,0,0,0) 70%),
   linear-gradient(0deg, var(--bg) 0%, rgba(11,12,14,.6) 10%, rgba(11,12,14,0) 30%); }
 .bb-copy { position: absolute; left: var(--gutter); bottom: 32%; z-index: 2; width: min(40vw, 620px); display: grid; gap: 16px; }
-.bb-kicker { display: flex; align-items: center; gap: 10px; font-family: var(--f-mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
+.bb-kicker { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-family: var(--f-mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
 .bb-kicker b { color: var(--amber); font-weight: 500; }
 .bb-title { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: clamp(40px, 6.2vw, 108px); line-height: .86; text-transform: uppercase; text-wrap: balance; overflow-wrap: anywhere; text-shadow: 0 2px 30px rgba(0,0,0,.5); transition: font-size .8s, opacity .8s; }
 .bb-desc { margin: 0; font-size: clamp(15px, 1.25vw, 20px); line-height: 1.35; text-shadow: 0 1px 6px rgba(0,0,0,.6); max-width: 46ch; transition: opacity .8s, max-height .8s; max-height: 8em; overflow: hidden; }
@@ -288,8 +288,17 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .bb-copy { width: min(56vw, 560px); }
 }
 @media (max-width: 860px) {
-  .links { display: none; }
+  /* two-row top bar: logo + search + live on top, section switch and pages below */
+  .nav { flex-wrap: wrap; row-gap: 10px; padding-bottom: 12px; }
+  .nav::before { content: ""; order: 8; flex-basis: 100%; height: 0; }
+  .sec-switch { order: 9; }
+  .links { order: 10; flex: 1; min-width: 0; overflow-x: auto; gap: 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 0; mask-image: linear-gradient(90deg, #000 88%, transparent); }
+  .links::-webkit-scrollbar { display: none; }
+  .links button { flex: none; white-space: nowrap; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; color: var(--ink); background: rgba(11,12,14,.45); }
+  .links button.on { background: var(--ink); color: #000; border-color: var(--ink); }
+  .links button:hover { color: inherit; }
   .sec-switch button { padding: 5px 10px; }
+  .page { padding-top: 130px; }
   .player { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .stage { place-items: start stretch; }
   .frame { max-width: 100%; }
@@ -301,10 +310,15 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .m-body, .m-more { padding-left: 20px; padding-right: 20px; }
 }
 @media (max-width: 620px) {
-  .nav { gap: 12px; }
+  .nav { gap: 10px 12px; }
   .logo { font-size: 22px; }
   .search.open input { width: 120px; }
-  .live-btn span { display: none; }
+  .nav.searching .logo, .nav.searching .np-btn { display: none; }
+  .nav.searching .search { flex: 1; min-width: 0; }
+  .nav.searching .search.open input { width: 100%; flex: 1; }
+  .nav.searching .spacer { display: none; }
+  .sec-switch button { font-size: 12px; padding: 5px 10px; }
+  .np-btn { font-size: 12px; padding: 5px 10px; }
   .billboard { height: 82vh; min-height: 520px; }
   .bb-media::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.3); pointer-events: none; }
   .bb-copy { left: var(--gutter); right: var(--gutter); width: auto; bottom: 18%; }
@@ -317,6 +331,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .handle { display: none; }
   .next-card .art { display: none; }
 }
+@media (max-width: 360px) { .logo { font-size: 19px; } .nav { gap: 10px 8px; } .live-btn { font-size: 13px; } }
 @media (hover: none) { .bob { display: none; } }
 /* section switch: page builds top-down */
 @keyframes bIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
@@ -870,7 +885,7 @@ $('modalwrap').addEventListener('click', e => {
 
 /* ================= pages / nav / search ================= */
 function setNav(view) { document.querySelectorAll('#links button').forEach(b => b.classList.toggle('on', b.dataset.view === view)); }
-function goHome() { $('page').hidden = true; $('homeview').hidden = false; $('q').value = ''; $('searchbox').classList.remove('open'); setNav('home'); renderRows(); window.scrollTo(0, 0); }
+function goHome() { $('page').hidden = true; $('homeview').hidden = false; $('q').value = ''; ($('searchbox').classList.remove('open'), $('nav').classList.remove('searching')); setNav('home'); renderRows(); window.scrollTo(0, 0); }
 function showGrid(title, items, extraHTML = '', tall = false) {
   if ($('page').hidden) pushLayer();
   stopPreview(); hideBob();
@@ -904,7 +919,7 @@ function showPage(view) {
 }
 $('links').onclick = e => { const b = e.target.closest('button'); if (b) showPage(b.dataset.view); };
 $('home').onclick = goHome;
-$('searchbtn').onclick = () => { $('searchbox').classList.add('open'); $('q').focus(); };
+$('searchbtn').onclick = () => { $('searchbox').classList.add('open'); $('nav').classList.add('searching'); $('q').focus(); };
 let qT;
 $('q').addEventListener('input', e => {
   clearTimeout(qT); const raw = e.target.value.trim(); const q = raw.toLowerCase();
@@ -915,7 +930,7 @@ $('q').addEventListener('input', e => {
     setNav(''); showGrid(`Results for “${raw}”`, hits);
   }, 160);
 });
-$('q').addEventListener('blur', () => { if (!$('q').value) $('searchbox').classList.remove('open'); });
+$('q').addEventListener('blur', () => { if (!$('q').value) { $('searchbox').classList.remove('open'); $('nav').classList.remove('searching'); } });
 window.addEventListener('scroll', () => $('nav').classList.toggle('solid', window.scrollY > 30), { passive: true });
 function toggleList(id) {
   myList = myList.includes(id) ? myList.filter(x => x !== id) : [id, ...myList];
@@ -1239,7 +1254,7 @@ function restoreFocus() {
 function pushLayer() { try { history.pushState({ oos: Date.now() }, ''); } catch (e) {} }
 function doBack() {
   const a = document.activeElement;
-  if (a && a.tagName === 'INPUT') { a.blur(); $('searchbox').classList.remove('open'); focusEl($('searchbtn')); return true; }
+  if (a && a.tagName === 'INPUT') { a.blur(); ($('searchbox').classList.remove('open'), $('nav').classList.remove('searching')); focusEl($('searchbtn')); return true; }
   if (!$('chooser').hidden) { if (store.get('sec', null)) { $('chooser').hidden = true; focusEl(defaultFocus(scopeEl())); return true; } return false; }
   if (fullPlayer()) { if (TV && $('side').classList.contains('tv-open')) { toggleQueue(false); return true; } minimizePlayer(); return true; }
   if (!$('modalwrap').hidden) { closeDetail(); restoreFocus(); return true; }
@@ -1294,11 +1309,11 @@ document.addEventListener('keydown', e => {
   // media keys work everywhere a video is loaded
   if (['pp', 'play', 'pause', 'stop', 'ff', 'rw', 'next', 'prev'].includes(k)) { if (!$('player').hidden) { e.preventDefault(); mediaKey(k); } return; }
   if (inInput) {
-    if (k === 'back' || (k === 'up')) { e.preventDefault(); if (k === 'back' && t.value) { t.value = ''; goHome(); } t.blur(); $('searchbox').classList.remove('open'); focusEl($('searchbtn')); }
+    if (k === 'back' || (k === 'up')) { e.preventDefault(); if (k === 'back' && t.value) { t.value = ''; goHome(); } t.blur(); ($('searchbox').classList.remove('open'), $('nav').classList.remove('searching')); focusEl($('searchbtn')); }
     else if (k === 'down' || k === 'ok') { const f = $('page').querySelector('.tile'); if (f) { e.preventDefault(); t.blur(); focusEl(f); } }
     else if ((k === 'right' && (TV || t.selectionStart >= t.value.length)) || (k === 'left' && (TV || t.selectionEnd === 0))) {
       e.preventDefault(); const nxt = k === 'right' ? $('livebtn') : $('searchbtn');
-      if (!t.value) $('searchbox').classList.remove('open'); t.blur(); focusEl(nxt);
+      if (!t.value) ($('searchbox').classList.remove('open'), $('nav').classList.remove('searching')); t.blur(); focusEl(nxt);
     }
     return;
   }
