@@ -71,10 +71,11 @@ img { display: block; max-width: 100%; }
 .links button:hover { color: var(--faint); }
 .spacer { flex: 1; }
 .search { display: flex; align-items: center; gap: 8px; border: 1px solid transparent; padding: 6px 8px; min-width: 0; transition: border-color .2s, background .2s; }
-.search.open, .search:focus-within { border-color: var(--ink); background: rgba(0,0,0,.75); }
+.search.open { border-color: var(--ink); background: rgba(0,0,0,.75); }
 .search button { background: none; border: 0; padding: 0; display: grid; place-items: center; }
 .search input { background: none; border: 0; color: var(--ink); font: inherit; width: 0; outline: none; min-width: 0; transition: width .25s; }
-.search.open input, .search:focus-within input { width: 220px; }
+.search.open input { width: 220px; }
+.search:not(.open) input { display: none; }
 .live-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 0; font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 .live-btn i { width: 8px; height: 8px; border-radius: 50%; background: var(--rec); box-shadow: 0 0 10px var(--rec); animation: pulse 2s infinite; }
 @keyframes pulse { 50% { opacity: .35; } }
@@ -302,7 +303,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 @media (max-width: 620px) {
   .nav { gap: 12px; }
   .logo { font-size: 22px; }
-  .search.open input, .search:focus-within input { width: 120px; }
+  .search.open input { width: 120px; }
   .live-btn span { display: none; }
   .billboard { height: 82vh; min-height: 520px; }
   .bb-copy { left: var(--gutter); right: var(--gutter); width: auto; bottom: 18%; }
@@ -361,7 +362,7 @@ html.tv .live-btn { font-size: 1.1vw; gap: .6vw; }
 html.tv .live-btn i { width: .6vw; height: .6vw; }
 html.tv .search svg { width: 1.7vw; height: 1.7vw; }
 html.tv .search input { font-size: 1.2vw; }
-html.tv .search.open input, html.tv .search:focus-within input { width: 18vw; }
+html.tv .search.open input { width: 18vw; }
 html.tv .billboard { height: 100vh; max-height: none; min-height: 0; }
 html.tv .bb-copy { width: 44vw; bottom: 33vh; gap: 1.4vw; }
 html.tv .bb-kicker { font-size: 1.05vw; }
@@ -475,7 +476,7 @@ html.tv .mini-hit { pointer-events: none; }
   <div class="spacer"></div>
   <div class="search" id="searchbox">
     <button id="searchbtn" aria-label="Search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
-    <input id="q" type="search" placeholder="Titles, brands, artists" aria-label="Search">
+    <input id="q" type="search" placeholder="Titles, brands, artists" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </div>
   <button class="live-btn" id="livebtn"><i></i><span>Live</span></button>
 </nav>
