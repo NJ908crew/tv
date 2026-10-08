@@ -333,6 +333,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
   .pills { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-padding: 0 18px; }
   .pills::-webkit-scrollbar { display: none; }
   .pill { flex: none; white-space: nowrap; }
+  .chsel { overflow-x: auto; scrollbar-width: none; } .chsel::-webkit-scrollbar { display: none; } .chopt { flex: none; }
   .p-top .grow { display: none; }
   .player.idle .p-top { opacity: 1; }
   .m-body { grid-template-columns: minmax(0, 1fr); }
@@ -411,6 +412,14 @@ html.kb .sec-switch button:focus { outline: 3px solid var(--ink); outline-offset
 .more-tile:hover { border-color: var(--ink); }
 /* TV control bar (only shown in TV mode) */
 .tvbar { display: none; }
+.chsel { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.35); width: max-content; max-width: 100%; }
+.chsel::before { content: "● Live"; align-self: center; padding: 0 8px 0 10px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--rec); white-space: nowrap; }
+.chopt { border: 0; border-radius: 999px; background: none; color: var(--dim); font-weight: 700; font-size: 13px; padding: 6px 12px; white-space: nowrap; }
+.chopt:hover { color: var(--ink); }
+.chopt.on { background: var(--amber); color: var(--amber-ink); }
+html.kb .chopt:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
+.tvch { justify-self: center; }
+html.tv .chsel { padding: .3vw; gap: .3vw; } html.tv .chsel::before { font-size: .8vw; padding: 0 .6vw; } html.tv .chopt { font-size: 1vw; padding: .45vw 1vw; }
 .np-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--amber); color: var(--amber-ink); font-weight: 800; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; padding: 6px 14px; white-space: nowrap; }
 .np-btn .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
 .np-btn .eq i { width: 3px; background: currentColor; animation: eq 1s ease-in-out infinite; }
@@ -627,6 +636,7 @@ html { scroll-behavior: smooth; }
     </div>
     <div class="tvbar" id="tvbar">
       <div class="tv-time"><span id="tvcur">0:00</span><div class="tv-track"><i id="tvprog"></i></div><span id="tvdur">0:00</span></div>
+      <div class="chsel tvch" id="tvch" role="radiogroup" aria-label="Live channel" hidden></div>
       <div class="tv-btns">
         <button class="tvb" id="tvprev" aria-label="Previous video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
         <button class="tvb" id="tvrw" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/><text x="12" y="15.5" font-size="7" text-anchor="middle" fill="currentColor" stroke="none" font-family="Arial" font-weight="700">10</text></svg></button>
@@ -649,6 +659,7 @@ html { scroll-behavior: smooth; }
         <button class="pill" id="plist">+ My List</button>
         <a class="pill" id="pyt" href="#" target="_blank" rel="noopener">YouTube ↗</a>
       </div>
+      <div class="chsel" id="chsel" role="radiogroup" aria-label="Live channel" hidden></div>
     </div>
     <div class="side-sub" id="sidesub">Up next</div>
     <div class="queue" id="queue"></div>
@@ -702,7 +713,9 @@ const isM = v => v && v.sec === 'music';
 const full = v => isM(v) ? `${v.ar} – ${v.t}` : v.t;
 const kindTxt = v => isM(v) ? (v.live ? 'Live set' : 'Music video') : (v.tour ? 'Tour video' : 'Full-length video');
 const boxTxt = v => isM(v) ? (v.live ? 'LIVE' : 'VIDEO') : (v.tour ? 'TOUR' : 'FULL');
-const CH = () => SEC === 'music' ? 'Channel 8' : 'Channel 7';
+const MCH = { all: ['All Music', () => true], hardcore: ['Hardcore', v => v.g === 'Hardcore'], hiphop: ['Hip Hop', v => v.g === 'Hip Hop'] };
+let liveCh = 'all'; try { liveCh = JSON.parse(localStorage.getItem('stv-mch')) || 'all'; } catch (e) {} if (!MCH[liveCh]) liveCh = 'all';
+const CH = () => SEC === 'music' ? (MCH[liveCh][0] + ' Channel') : 'Channel 7';
 const yti = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const fb = id => `onerror="this.onerror=null;this.src='${yti(id)}'"`;
 const fmt = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
@@ -1051,7 +1064,18 @@ function toggleList(id) {
   myList = myList.includes(id) ? myList.filter(x => x !== id) : [id, ...myList];
   store.set('mylist', myList);
 }
-$('livebtn').onclick = () => playFrom(shuffle(PLAYABLE), null, 'Live · ' + CH(), true);
+function startLive(ch) {
+  if (SEC === 'music' && ch && MCH[ch]) { liveCh = ch; store.set('mch', ch); }
+  const pool = SEC === 'music' ? PLAYABLE.filter(MCH[liveCh][1]) : PLAYABLE;
+  playFrom(shuffle(pool), null, 'Live · ' + CH(), true);
+}
+function renderChSel() {
+  const on = P.live && SEC === 'music';
+  const html = on ? Object.entries(MCH).map(([k, [l]]) => `<button class="chopt ${k === liveCh ? 'on' : ''}" data-ch="${k}" role="radio" aria-checked="${k === liveCh}">${esc(l)}</button>`).join('') : '';
+  for (const id of ['chsel', 'tvch']) { $(id).hidden = !on; $(id).innerHTML = html; }
+}
+for (const id of ['chsel', 'tvch']) $(id).addEventListener('click', e => { const b = e.target.closest('.chopt'); if (!b || b.dataset.ch === liveCh) return; const tv = id === 'tvch'; startLive(b.dataset.ch); if (KB()) setTimeout(() => focusEl($(id).querySelector(`[data-ch="${b.dataset.ch}"]`)), 80); });
+$('livebtn').onclick = () => startLive();
 
 /* ================= player ================= */
 let yt = null, ytReady = false, pending = null;
@@ -1164,6 +1188,7 @@ function renderSide() {
   $('pyt').href = 'https://www.youtube.com/watch?v=' + v.id;
   $('plist').textContent = myList.includes(v.id) ? '✓ In My List' : '+ My List';
   $('sidesub').textContent = P.live ? 'Coming up on ' + CH() : 'Up next · ' + P.title;
+  renderChSel();
   const n = P.q.length, idx = []; for (let k = 0; k < Math.min(n, 30); k++) idx.push((P.i + k) % n);
   $('queue').innerHTML = idx.map((j, k) => { const q = P.q[j]; return `<button class="q ${k === 0 ? 'on' : ''} ${P.dead.has(q.id) ? 'dead' : ''}" data-j="${j}"><span class="n">${k === 0 ? '▶' : k}</span><div class="im"><img loading="lazy" src="${cover(q.id)}" alt="" ${fb(q.id)}><span>${fmt(q.s)}</span></div><div><div class="t">${esc(isM(q) ? q.t : q.t)}</div><div class="c">${k === 0 ? 'Now playing' : esc(q.ch)}</div></div></button>`; }).join('');
   $('queue').scrollTop = 0;
