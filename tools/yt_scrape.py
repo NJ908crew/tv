@@ -119,5 +119,15 @@ def do_check(ids_file, out_file):
     json.dump(out, open(out_file, 'w'))
 
 
+def do_queries(qfile, out_file):
+    """One search per line of qfile; keeps the top 15 results for each."""
+    out = {}
+    for q in [x.strip() for x in open(qfile, encoding='utf-8') if x.strip()]:
+        try: out[q] = search(q)[:15]
+        except Exception as e: out[q] = {'error': str(e)}
+        time.sleep(1.2)
+    json.dump(out, open(out_file, 'w'), ensure_ascii=False)
+
+
 if __name__ == '__main__':
-    {'search': do_search, 'check': do_check}[sys.argv[1]](sys.argv[2], sys.argv[3])
+    {'search': do_search, 'check': do_check, 'queries': do_queries}[sys.argv[1]](sys.argv[2], sys.argv[3])
