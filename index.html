@@ -253,6 +253,7 @@ main { position: relative; z-index: 3; margin-top: -12vw; padding-bottom: 80px; 
 .p-top .grow { flex: 1; }
 .p-side-toggle { transition: opacity .35s; }
 .static { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; image-rendering: pixelated; }
+video.static { object-fit: fill; background: #3a3a3a; pointer-events: none; }
 .notice { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; text-align: center; padding: 24px; background: rgba(0,0,0,.7); font-family: var(--f-mono); font-size: 20px; }
 .notice small { display: block; color: var(--dim); margin-top: 6px; font-family: var(--f-body); font-size: 15px; }
 .next-card { position: absolute; inset: 0; z-index: 4; background: #000; overflow: hidden; }
@@ -627,6 +628,7 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     <div class="frame" id="frame">
       <div id="yt"></div>
       <canvas class="static" id="static" width="160" height="90" hidden></canvas>
+      <video class="static" id="staticv" muted loop playsinline preload="none" disablepictureinpicture disableremoteplayback aria-hidden="true" hidden><source src="media/static.webm" type="video/webm"><source src="media/static.mp4" type="video/mp4"></video>
       <div class="next-card" id="nextcard" hidden>
         <img class="bg" id="ncbg" alt="">
         <div class="in">
@@ -703,8 +705,8 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     </div>
   </div>
 </div>
-<script src="videos.js?v=20261010015220"></script>
-<script src="music.js?v=20261010015220"></script>
+<script src="videos.js?v=20261010031755"></script>
+<script src="music.js?v=20261010031755"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -718,7 +720,7 @@ if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= auto-update =================
    Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
    reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
-const BUILD = '20261010015220';
+const BUILD = '20261010031755';
 (() => {
   if (!location.protocol.startsWith('http')) return;
   let quietSince = Date.now();
@@ -1301,7 +1303,21 @@ function hideNotice() { $('notice').hidden = true; }
 const cv = $('static'), cx = cv.getContext('2d'); let st = false, raf = 0;
 const reduce = TV || matchMedia('(prefers-reduced-motion: reduce)').matches;
 function drawStatic() { const im = cx.createImageData(160, 90), d = im.data; for (let i = 0; i < d.length; i += 4) { const g = Math.random() * 190 | 0; d[i] = d[i + 1] = d[i + 2] = g; d[i + 3] = 255; } cx.putImageData(im, 0, 0); if (st && !reduce) raf = requestAnimationFrame(drawStatic); }
-function staticOn(on) { st = on; cv.hidden = !on; cancelAnimationFrame(raf); if (on) drawStatic(); }
+// The static plays as a tiny looping clip: video keeps playing smoothly even while the page is busy
+// loading YouTube (the hand-drawn canvas version stuttered on TVs). Canvas stays as the fallback.
+const sv = $('staticv'); setTimeout(() => { try { sv.preload = 'auto'; sv.load(); } catch (e) {} }, 2500); // fetch after the page has settled
+const svOK = () => sv && sv.networkState !== 3 && !sv.error && !(reduce && !TV);
+function staticOn(on) {
+  st = on; cancelAnimationFrame(raf);
+  if (svOK()) {
+    cv.hidden = true; sv.hidden = !on;
+    if (on) { try { sv.currentTime = Math.random() * 1.8; } catch (e) {} const pr = sv.play(); if (pr) pr.catch(() => { sv.hidden = true; if (st) { cv.hidden = false; drawStatic(); } }); }
+    else sv.pause();
+    return;
+  }
+  if (sv) { sv.hidden = true; try { sv.pause(); } catch (e) {} }
+  cv.hidden = !on; if (on) drawStatic();
+}
 
 
 const NAV = {
