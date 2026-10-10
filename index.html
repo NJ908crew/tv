@@ -700,8 +700,8 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     </div>
   </div>
 </div>
-<script src="videos.js"></script>
-<script src="music.js"></script>
+<script src="videos.js?v=20261010010153"></script>
+<script src="music.js?v=20261010010153"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -712,6 +712,26 @@ const TV = (() => {
   return /OutofStepTV|SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|AFT[A-Z0-9]|BRAVIA|Android TV|GoogleTV|Google TV|CrKey|HbbTV|PhilipsTV|VIDAA|Hisense|AppleTV|Roku/i.test(navigator.userAgent);
 })();
 if (TV) document.documentElement.classList.add('tv', 'kb');
+/* ================= auto-update =================
+   Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
+   reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
+const BUILD = '20261010010153';
+(() => {
+  if (!location.protocol.startsWith('http')) return;
+  let quietSince = Date.now();
+  ['keydown', 'pointerdown', 'wheel', 'touchstart'].forEach(e => addEventListener(e, () => { quietSince = Date.now(); }, { capture: true, passive: true }));
+  async function check(reopened) {
+    let j; try { j = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json(); } catch (e) { return; }
+    if (!j || !j.build || j.build === BUILD) return;
+    const pl = document.getElementById('player'); if (pl && !pl.hidden) return; // a video (full or mini) is up
+    if (!reopened && Date.now() - quietSince < 120000) return;
+    const u = new URL(location.href); u.searchParams.set('v', j.build); u.searchParams.delete('tv');
+    location.replace(u.toString());
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(true); });
+  setInterval(() => check(false), 5 * 60000);
+  setTimeout(() => check(false), 20000);
+})();
 /* ================= data ================= */
 const SKATE = (window.SKATE_VIDEOS || []).map(v => ({ ...v, sec: 'skate' }));
 const MUSIC = (window.MUSIC_VIDEOS || []).map(v => ({ ...v, sec: 'music', ch: v.ar, tour: false, a: 0, ry: v.ry ? v.y : 0, live: v.k === 'live' }));
