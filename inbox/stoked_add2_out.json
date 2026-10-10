@@ -1,0 +1,116 @@
+{
+ "U8qH4y0PPCM": {
+  "e": true,
+  "oembed": {
+   "title": "Almost \"Round 3\" (2004)",
+   "author_name": "Skate Video Vault",
+   "author_url": "https://www.youtube.com/@SkateVideoVault",
+   "type": "video",
+   "height": 150,
+   "width": 200,
+   "version": "1.0",
+   "provider_name": "YouTube",
+   "provider_url": "https://www.youtube.com/",
+   "thumbnail_height": 360,
+   "thumbnail_width": 480,
+   "thumbnail_url": "https://i.ytimg.com/vi/U8qH4y0PPCM/hqdefault.jpg",
+   "html": "<iframe width=\"200\" height=\"150\" src=\"https://www.youtube.com/embed/U8qH4y0PPCM?feature=oembed\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen title=\"Almost &quot;Round 3&quot; (2004)\"></iframe>"
+  },
+  "thumb": "maxresdefault",
+  "tried": [
+   "almost-round-3",
+   "almost-round-three",
+   "almost-skateboards-round-three",
+   "almost-round-3"
+  ],
+  "svs": "almost-round-3",
+  "cover_url": "https://assets.skatevideo.site/covers/almost-round-3-37552.png",
+  "year_guess": "2004",
+  "minutes": 33,
+  "cover": "U8qH4y0PPCM.cover.png"
+ },
+ "EdrvEw6ZCCk": {
+  "e": true,
+  "oembed": {
+   "title": "Baker \"Bootleg\" (1998)",
+   "author_name": "Skate Video Vault",
+   "author_url": "https://www.youtube.com/@SkateVideoVault",
+   "type": "video",
+   "height": 150,
+   "width": 200,
+   "version": "1.0",
+   "provider_name": "YouTube",
+   "provider_url": "https://www.youtube.com/",
+   "thumbnail_height": 360,
+   "thumbnail_width": 480,
+   "thumbnail_url": "https://i.ytimg.com/vi/EdrvEw6ZCCk/hqdefault.jpg",
+   "html": "<iframe width=\"200\" height=\"150\" src=\"https://www.youtube.com/embed/EdrvEw6ZCCk?feature=oembed\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen title=\"Baker &quot;Bootleg&quot; (1998)\"></iframe>"
+  },
+  "thumb": "maxresdefault",
+  "tried": [
+   "baker-bootleg",
+   "baker-skateboards-bootleg",
+   "baker-bootleg-1998",
+   "baker-baker-bootleg"
+  ],
+  "svs": "baker-baker-bootleg",
+  "cover_url": "https://assets.skatevideo.site/covers/baker-baker-bootleg-23270.png",
+  "year_guess": "1999",
+  "minutes": 55,
+  "cover": "EdrvEw6ZCCk.cover.png"
+ },
+ "47Tvon-C-SU": {
+  "e": true,
+  "oembed": {
+   "title": "Element \"Elementality Volume One\" (2005)",
+   "author_name": "Skate Video Vault",
+   "author_url": "https://www.youtube.com/@SkateVideoVault",
+   "type": "video",
+   "height": 150,
+   "width": 200,
+   "version": "1.0",
+   "provider_name": "YouTube",
+   "provider_url": "https://www.youtube.com/",
+   "thumbnail_height": 360,
+   "thumbnail_width": 480,
+   "thumbnail_url": "https://i.ytimg.com/vi/47Tvon-C-SU/hqdefault.jpg",
+   "html": "<iframe width=\"200\" height=\"150\" src=\"https://www.youtube.com/embed/47Tvon-C-SU?feature=oembed\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen title=\"Element &quot;Elementality Volume One&quot; (2005)\"></iframe>"
+  },
+  "thumb": "maxresdefault",
+  "tried": [
+   "element-elementality-vol-1",
+   "element-elementality-volume-1",
+   "element-elementality",
+   "element-elementality-volume-1",
+   "element-elementality-volume-2"
+  ],
+  "svs": "element-elementality-volume-1",
+  "cover_url": "https://assets.skatevideo.site/covers/element-elementality-volume-1-36722.jpg",
+  "year_guess": "2005",
+  "minutes": 51,
+  "cover": "47Tvon-C-SU.cover.jpg"
+ },
+ "65fu1m632-c": {
+  "e": true,
+  "oembed": {
+   "title": "All We Got Is Us - 90's Chicago Skate Video By : Doug Kenyon",
+   "author_name": "RuskaBeats",
+   "author_url": "https://www.youtube.com/@RuskaBeats",
+   "type": "video",
+   "height": 150,
+   "width": 200,
+   "version": "1.0",
+   "provider_name": "YouTube",
+   "provider_url": "https://www.youtube.com/",
+   "thumbnail_height": 360,
+   "thumbnail_width": 480,
+   "thumbnail_url": "https://i.ytimg.com/vi/65fu1m632-c/hqdefault.jpg",
+   "html": "<iframe width=\"200\" height=\"150\" src=\"https://www.youtube.com/embed/65fu1m632-c?feature=oembed\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen title=\"All We Got Is Us - 90&#39;s Chicago Skate Video By : Doug Kenyon\"></iframe>"
+  },
+  "thumb": "hqdefault",
+  "tried": [
+   "all-we-got-is-us",
+   "doug-kenyon-all-we-got-is-us"
+  ]
+ }
+}
