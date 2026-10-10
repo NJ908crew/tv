@@ -562,6 +562,7 @@ html.tv, html.tv .track { scroll-behavior: auto; }
 html.tv *, html.tv *::before, html.tv *::after { animation: none !important; transition: none !important; }
 html.tv .row.rv, html.tv .row.rv .track > * { opacity: 1; transform: none; }
 html.tv .tile:focus, html.tv .m-card:focus { box-shadow: none; }
+html.tv .tile, html.tv .m-card { transition: transform .2s cubic-bezier(.2,.7,.2,1), outline-color .2s !important; }
 html.tv .live-btn i, html.tv .mm-live i { box-shadow: none; }
 html.tv .bb-title, html.tv .bb-desc { text-shadow: none; }
 html.tv .bb-video { display: none; }
@@ -702,8 +703,8 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     </div>
   </div>
 </div>
-<script src="videos.js?v=20261010011208"></script>
-<script src="music.js?v=20261010011208"></script>
+<script src="videos.js?v=20261010015220"></script>
+<script src="music.js?v=20261010015220"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -717,7 +718,7 @@ if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= auto-update =================
    Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
    reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
-const BUILD = '20261010011208';
+const BUILD = '20261010015220';
 (() => {
   if (!location.protocol.startsWith('http')) return;
   let quietSince = Date.now();
@@ -1380,7 +1381,8 @@ function focusEl(el, opts = {}) {
   const row = el.closest('.row'); const tr = el.closest('.track');
   if (row && tr) row.dataset.fi = [...tr.children].indexOf(el.closest('.top-item') || el);
 }
-const smooth = () => (reduce ? 'auto' : 'smooth');
+// TV keeps its gliding moves through and between rows (cheap for the TV to draw); other motion stays off there
+const smooth = () => (TV || !reduce ? 'smooth' : 'auto');
 function ensureVisible(el, instant) {
   const beh = instant ? 'auto' : smooth();
   const tr = el.closest('.track');

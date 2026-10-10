@@ -51,8 +51,12 @@ class MainActivity : Activity() {
             mediaPlaybackRequiresUserGesture = false
             loadWithOverviewMode = true
             useWideViewPort = true
-            // Tells the site to switch into its TV layout and remote controls.
-            userAgentString = "$userAgentString OutofStepTV/1.0 AndroidTV"
+            // Present as desktop Chrome so YouTube serves its desktop player, whose on-screen
+            // controls fade away during playback (the phone-style player keeps them pinned on
+            // screen until someone taps it, which a remote can't do).
+            // "OutofStepTV" tells the site to switch into its TV layout and remote controls.
+            val chrome = Regex("Chrome/[\\d.]+").find(userAgentString)?.value ?: "Chrome/124.0.0.0"
+            userAgentString = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) $chrome Safari/537.36 OutofStepTV/1.1 AndroidTV"
         }
         web.isFocusable = true
         web.isFocusableInTouchMode = true
