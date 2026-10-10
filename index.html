@@ -705,8 +705,8 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     </div>
   </div>
 </div>
-<script src="videos.js?v=20261010171002"></script>
-<script src="music.js?v=20261010171002"></script>
+<script src="videos.js?v=20261010171208"></script>
+<script src="music.js?v=20261010171208"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -720,7 +720,7 @@ if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= auto-update =================
    Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
    reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
-const BUILD = '20261010171002';
+const BUILD = '20261010171208';
 (() => {
   if (!location.protocol.startsWith('http')) return;
   let quietSince = Date.now();
@@ -810,7 +810,7 @@ function buildRows() {
   if (last) { const like = ALL.filter(v => v.ch === last.ch && v.id !== last.id); if (like.length >= 3) rows.push({ title: `Because you watched ${last.t}`, items: sshuf('k2', like), kind: 'wide' }); }
   const ml = myList.map(id => BY[id]).filter(v => v && v.sec === SEC);
   if (ml.length) rows.push({ title: 'My List', items: ml, kind: 'wide' });
-  rows.push({ title: 'New on OutofStep.tv', items: ALL.filter(v => v.y >= 2025).sort((a, b) => b.y - a.y || b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'New on OutofStep.tv', items: ALL.filter(v => v.y >= 2025 && !(v.ry && v.ry < 2024)) /* fresh uploads of old tapes aren't new */.sort((a, b) => b.y - a.y || b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Feature Length · 50 Minutes +', items: sshuf('k3', ALL.filter(v => v.s >= 3000)), kind: 'wide' });
   const old = ALL.filter(v => v.ry && v.ry < 2005).sort((a, b) => a.ry - b.ry);
   if (old.length >= 5) rows.push({ title: 'The Golden Era · Pre-2005', items: old, kind: 'wide' });
