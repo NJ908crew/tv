@@ -6,8 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       id:
-        description: YouTube video id
+        description: YouTube video id (or "search")
         required: true
+      query:
+        description: YouTube search text (when id is "search")
+        required: false
       cover:
         description: Box art image URL (optional)
         required: false
@@ -23,8 +26,32 @@ jobs:
         env:
           ID: ${{ inputs.id }}
           COVER: ${{ inputs.cover }}
+          QUERY: ${{ inputs.query }}
         run: |
           set -u
+          if [ "$ID" = "search" ]; then
+            mkdir -p out/inbox/search && cd out/inbox/search
+            UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+            curl -sL -A "$UA" -H 'Accept-Language: en-US' -b 'CONSENT=YES+1' -G --data-urlencode "search_query=$QUERY" https://www.youtube.com/results -o r.html
+            python3 - <<'PY'
+          import re, json
+          h = open('r.html', encoding='utf-8', errors='ignore').read()
+          m = re.search(r'var ytInitialData = (\{.*?\});</script>', h)
+          out = []
+          def walk(o):
+              if isinstance(o, dict):
+                  v = o.get('videoRenderer')
+                  if v:
+                      t = lambda k: ''.join(r.get('text', '') for r in (v.get(k, {}) or {}).get('runs', [])) or (v.get(k, {}) or {}).get('simpleText', '')
+                      out.append({'id': v.get('videoId'), 'title': t('title'), 'channel': t('ownerText'), 'length': (v.get('lengthText') or {}).get('simpleText'), 'views': (v.get('viewCountText') or {}).get('simpleText'), 'published': (v.get('publishedTimeText') or {}).get('simpleText')})
+                  for x in o.values(): walk(x)
+              elif isinstance(o, list):
+                  for x in o: walk(x)
+          if m: walk(json.loads(m.group(1)))
+          json.dump(out, open('results.json', 'w'), indent=1); print(len(out), 'results')
+          PY
+            rm -f r.html; exit 0
+          fi
           mkdir -p "out/inbox/$ID" && cd "out/inbox/$ID"
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
           curl -sL -A "$UA" -o thumb.jpg "https://i.ytimg.com/vi/$ID/maxresdefault.jpg" || true
