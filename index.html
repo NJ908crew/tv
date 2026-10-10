@@ -705,8 +705,8 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     </div>
   </div>
 </div>
-<script src="videos.js?v=20261010031755"></script>
-<script src="music.js?v=20261010031755"></script>
+<script src="videos.js?v=20261010094508"></script>
+<script src="music.js?v=20261010094508"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -720,7 +720,7 @@ if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= auto-update =================
    Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
    reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
-const BUILD = '20261010031755';
+const BUILD = '20261010094508';
 (() => {
   if (!location.protocol.startsWith('http')) return;
   let quietSince = Date.now();
@@ -1232,7 +1232,7 @@ function minimizePlayer() {
   saveProg(); clearTimeout(idleT); $('player').classList.remove('idle');
   $('player').classList.add('mini'); document.body.classList.remove('lock'); pfull(false);
   syncMini(); miniTick(); clearInterval(P.miniT); P.miniT = setInterval(miniTick, 1000);
-  if (TV) { $('npbtn').hidden = false; tvToast('The video keeps playing. To go back to it, press <b>▲ Up</b> to the top and select <b>Now Playing</b>, or move down to the mini player.'); }
+  if (TV) { $('npbtn').hidden = false; tvToast('The video keeps playing. Press <b>Back</b> to jump to the mini player, or select <b>Now Playing</b> in the top menu.'); }
   if (!$('homeview').hidden) renderRows();
   restoreFocus();
 }
@@ -1494,11 +1494,19 @@ function doBack() {
   if (fullPlayer()) { if (TV && $('side').classList.contains('tv-open')) { toggleQueue(false); return true; } minimizePlayer(); return true; }
   if (!$('modalwrap').hidden) { closeDetail(); restoreFocus(); return true; }
   if (!$('page').hidden) { goHome(); if (KB()) setTimeout(() => focusEl($('links').querySelector('button.on') || $('bbplay'), { instant: true }), 30); return true; }
-  if (KB() && a && a !== $('bbplay') && !a.closest('.nav') && !a.closest('#player.mini')) { focusEl($('bbplay')); return true; }
-  if (isMini()) { closePlayer(); if (KB()) focusEl($('bbplay')); return true; }
+  // Home screen with a remote: Back jumps to the mini player when something is playing,
+  // otherwise to the top menu. From the mini player it goes to the top menu; from the menu it leaves the app.
+  if (KB()) {
+    const inNav = a && a.closest('.nav'), inMini = a && a.closest('#player.mini');
+    if (isMini() && !inMini && !inNav) { focusEl($('miniplay')); return true; }
+    if (!inNav) { toTopMenu(); return true; }
+    return false;
+  }
+  if (isMini()) { closePlayer(); return true; }
   return false;
 }
 window.addEventListener('popstate', () => { if (!doBack() && history.state && history.state.oos) history.back(); });
+function toTopMenu() { window.scrollTo({ top: 0, behavior: smooth() }); focusEl($('links').querySelector('button.on') || $('links').querySelector('button')); }
 function back() { if (history.state && history.state.oos) history.back(); else doBack(); }
 
 /* ---- TV player controls ---- */
