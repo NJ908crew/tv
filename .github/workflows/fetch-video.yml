@@ -1,0 +1,61 @@
+name: Fetch video assets
+
+# Helper for adding catalog entries: grabs a YouTube video's details + thumbnail and an
+# optional box-art image, and drops them on the "inbox" branch for review.
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: YouTube video id
+        required: true
+      cover:
+        description: Box art image URL (optional)
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch
+        env:
+          ID: ${{ inputs.id }}
+          COVER: ${{ inputs.cover }}
+        run: |
+          set -u
+          mkdir -p "out/inbox/$ID" && cd "out/inbox/$ID"
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+          curl -sL -A "$UA" -o thumb.jpg "https://i.ytimg.com/vi/$ID/maxresdefault.jpg" || true
+          if [ "$(stat -c %s thumb.jpg 2>/dev/null || echo 0)" -lt 5000 ]; then curl -sL -o thumb.jpg "https://i.ytimg.com/vi/$ID/hqdefault.jpg"; echo hq > thumb-hq.txt; fi
+          curl -s -o oembed.json -w '%{http_code}' "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=$ID&format=json" > oembed-status.txt || true
+          curl -sL -A "$UA" -H 'Accept-Language: en-US' -b 'CONSENT=YES+1' "https://www.youtube.com/watch?v=$ID" -o watch.html || true
+          python3 - <<'PY'
+          import re, json
+          h = open('watch.html', encoding='utf-8', errors='ignore').read()
+          def g(p):
+              m = re.search(p, h); return m.group(1) if m else None
+          meta = {
+            'lengthSeconds': g(r'"lengthSeconds":"(\d+)"'),
+            'viewCount': g(r'"viewCount":"(\d+)"'),
+            'publishDate': g(r'"publishDate":"([^"]+)"') or g(r'"uploadDate":"([^"]+)"'),
+            'author': g(r'"ownerChannelName":"([^"]+)"'),
+            'title': g(r'"title":"([^"]+)","lengthSeconds"'),
+            'playableInEmbed': g(r'"playableInEmbed":(true|false)'),
+            'status': g(r'"playabilityStatus":\{"status":"([A-Z_]+)"'),
+          }
+          json.dump(meta, open('meta.json', 'w'), indent=1); print(meta)
+          PY
+          rm -f watch.html
+          if [ -n "$COVER" ]; then curl -sL -A "$UA" -o "cover.${COVER##*.}" "$COVER" || true; fi
+          ls -la
+      - name: Publish to inbox branch
+        env:
+          ID: ${{ inputs.id }}
+        run: |
+          cd out
+          git init -q && git checkout -q -b inbox
+          git config user.name "OutofStep bot" && git config user.email "actions@users.noreply.github.com"
+          git add -A && git commit -qm "Fetched $ID"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" inbox
