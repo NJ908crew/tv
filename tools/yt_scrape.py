@@ -129,5 +129,43 @@ def do_queries(qfile, out_file):
     json.dump(out, open(out_file, 'w'), ensure_ascii=False)
 
 
+def do_addskate(spec_file, out_file):
+    """For each {id, slugs}: YouTube thumbnail + embed check, and box art + year + runtime from
+    the first SkateVideoSite slug that exists. Files land next to out_file."""
+    import os
+    d = os.path.dirname(out_file); res = {}
+    for it in json.load(open(spec_file)):
+        vid = it['id']; r = {}
+        try:
+            st, body = get(f'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={vid}&format=json')
+            r['e'] = True; r['oembed'] = json.loads(body)
+        except urllib.error.HTTPError as e: r['e'] = False; r['code'] = e.code
+        except Exception as e: r['e'] = None
+        for name in ('maxresdefault', 'hqdefault'):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(f'https://i.ytimg.com/vi/{vid}/{name}.jpg', headers={'User-Agent': UA}), timeout=20) as x:
+                    b = x.read()
+                if len(b) > 5000:
+                    open(os.path.join(d, f'{vid}.thumb.jpg'), 'wb').write(b); r['thumb'] = name; break
+            except Exception: pass
+        for slug in it.get('slugs', []):
+            try:
+                _, h = get('https://skatevideosite.com/videos/' + slug)
+            except Exception: continue
+            m = re.search(r'property="og:image" content="([^"]+)"', h)
+            if not m: continue
+            r['svs'] = slug; r['cover_url'] = m.group(1)
+            y = re.search(r'\b(19[89]\d|20[0-2]\d)\b', re.sub(r'<[^>]+>', ' ', h)[:20000]); r['year_guess'] = y.group(1) if y else None
+            mm = re.search(r'(\d+)\s*min', re.sub(r'<[^>]+>', ' ', h)); r['minutes'] = int(mm.group(1)) if mm else None
+            try:
+                with urllib.request.urlopen(urllib.request.Request(m.group(1), headers={'User-Agent': UA}), timeout=30) as x:
+                    ext = m.group(1).rsplit('.', 1)[-1].split('?')[0][:4]
+                    open(os.path.join(d, f'{vid}.cover.{ext}'), 'wb').write(x.read()); r['cover'] = f'{vid}.cover.{ext}'
+            except Exception as e: r['cover_err'] = str(e)
+            break
+        res[vid] = r; time.sleep(1)
+    json.dump(res, open(out_file, 'w'), ensure_ascii=False, indent=1)
+
+
 if __name__ == '__main__':
-    {'search': do_search, 'check': do_check, 'queries': do_queries}[sys.argv[1]](sys.argv[2], sys.argv[3])
+    {'search': do_search, 'check': do_check, 'queries': do_queries, 'addskate': do_addskate}[sys.argv[1]](sys.argv[2], sys.argv[3])
