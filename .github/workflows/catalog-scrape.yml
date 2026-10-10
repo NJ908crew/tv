@@ -1,0 +1,37 @@
+name: Catalog scrape
+
+# Runs tools/yt_scrape.py on GitHub's machines (which can reach YouTube and MusicBrainz)
+# and drops the result on the "inbox" branch.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: search or check
+        required: true
+      input:
+        description: Input file in the repo (e.g. tools/punk_artists.txt)
+        required: true
+      output:
+        description: Output file name
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scrape
+        run: |
+          mkdir -p out/inbox
+          python3 tools/yt_scrape.py "${{ inputs.mode }}" "${{ inputs.input }}" "out/inbox/${{ inputs.output }}"
+      - name: Publish to inbox branch
+        run: |
+          cd out
+          git init -q && git checkout -q -b inbox
+          git config user.name "OutofStep bot" && git config user.email "actions@users.noreply.github.com"
+          git add -A && git commit -qm "Scrape ${{ inputs.output }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" inbox
