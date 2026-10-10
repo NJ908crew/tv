@@ -701,12 +701,12 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     <h1>What are you watching?</h1>
     <div class="choices">
       <button class="choice" data-sec="skate" style="--c:#f2a93b"><img src="covers/xLIozOhCrSk.jpg" alt=""><div class="tx"><span>Section 01</span><b>Skate</b><small>Full-length skate videos from the brands, shops and mags</small></div></button>
-      <button class="choice" data-sec="music" style="--c:#ff5c8a"><img src="https://i.ytimg.com/vi/C5_QkWHzOa0/maxresdefault.jpg" alt=""><div class="tx"><span>Section 02</span><b>Music</b><small>Hardcore and Hip Hop · music videos and live sets</small></div></button>
+      <button class="choice" data-sec="music" style="--c:#ff5c8a"><img src="https://i.ytimg.com/vi/C5_QkWHzOa0/maxresdefault.jpg" alt=""><div class="tx"><span>Section 02</span><b>Music</b><small>Hardcore, Punk and Hip Hop · music videos and live sets</small></div></button>
     </div>
   </div>
 </div>
-<script src="videos.js?v=20261010113549"></script>
-<script src="music.js?v=20261010113549"></script>
+<script src="videos.js?v=20261010115106"></script>
+<script src="music.js?v=20261010115106"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -720,7 +720,7 @@ if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= auto-update =================
    Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
    reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
-const BUILD = '20261010113549';
+const BUILD = '20261010115106';
 (() => {
   if (!location.protocol.startsWith('http')) return;
   let quietSince = Date.now();
@@ -741,6 +741,7 @@ const BUILD = '20261010113549';
 const SKATE = (window.SKATE_VIDEOS || []).map(v => ({ ...v, sec: 'skate' }));
 const MUSIC = (window.MUSIC_VIDEOS || []).map(v => ({ ...v, sec: 'music', ch: v.ar, tour: false, a: 0, ry: v.ry ? v.y : 0, live: v.k === 'live' }));
 const SESSION = /npr|kexp|audiotree|colors/i;
+const POPSKATE = /^(Blink-182|Green Day|The Offspring|Sum 41|Good Charlotte|New Found Glory|Simple Plan|Yellowcard|The Starting Line|All Time Low|The Wonder Years|Neck Deep|State Champs|The Story So Far|Real Friends|Knuckle Puck|Four Year Strong|Motion City Soundtrack|Saves the Day|MxPx|NOFX|Pennywise|Lagwagon|No Use for a Name|Strung Out|Millencolin|Face to Face|Guttermouth|Unwritten Law|Good Riddance|The Vandals|Teenage Bottlerocket|The Queers|Screeching Weasel|Me First and the Gimme Gimmes|Less Than Jake|The Interrupters)$/;
 const BY = Object.fromEntries([...SKATE, ...MUSIC].map(v => [v.id, v]));
 let SEC = 'skate', ALL = SKATE, PLAYABLE = SKATE.filter(v => v.e);
 const $ = id => document.getElementById(id);
@@ -752,7 +753,7 @@ const isM = v => v && v.sec === 'music';
 const full = v => isM(v) ? `${v.ar} – ${v.t}` : v.t;
 const kindTxt = v => isM(v) ? (v.live ? 'Live set' : 'Music video') : (v.tour ? 'Tour video' : 'Full-length video');
 const boxTxt = v => isM(v) ? (v.live ? 'LIVE' : 'VIDEO') : (v.tour ? 'TOUR' : 'FULL');
-const MCH = { all: ['All Music', () => true], hardcore: ['Hardcore', v => v.g === 'Hardcore'], hiphop: ['Hip Hop', v => v.g === 'Hip Hop'] };
+const MCH = { all: ['All Music', () => true], hardcore: ['Hardcore', v => v.g === 'Hardcore'], punk: ['Punk', v => v.g === 'Punk'], hiphop: ['Hip Hop', v => v.g === 'Hip Hop'] };
 let liveCh = 'all'; try { liveCh = JSON.parse(localStorage.getItem('stv-mch')) || 'all'; } catch (e) {} if (!MCH[liveCh]) liveCh = 'all';
 const CH = () => SEC === 'music' ? (MCH[liveCh][0] + ' Channel') : 'Channel 7';
 const yti = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -833,13 +834,17 @@ function buildMusicRows() {
   const ml = myList.map(id => BY[id]).filter(mine);
   if (ml.length) rows.push({ title: 'My List', items: ml, kind: 'wide' });
   rows.push({ title: 'Hardcore', items: vids.filter(v => v.g === 'Hardcore').sort((a, b) => b.v - a.v), kind: 'wide', more: 'hardcore' });
+  rows.push({ title: 'Punk', items: vids.filter(v => v.g === 'Punk').sort((a, b) => b.v - a.v), kind: 'wide', more: 'punk' });
   rows.push({ title: 'Hip Hop', items: vids.filter(v => v.g === 'Hip Hop').sort((a, b) => b.v - a.v), kind: 'wide', more: 'hiphop' });
   rows.push({ title: 'Full Sets & Live Sessions', items: ALL.filter(v => v.live).sort((a, b) => b.v - a.v), kind: 'wide', more: 'live' });
   rows.push({ title: 'Tiny Desk, KEXP & Studio Sessions', items: ALL.filter(v => v.live && SESSION.test(v.src)).sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Golden Era Hip Hop · 1989–1999', items: vids.filter(v => v.g === 'Hip Hop' && v.ry && v.ry >= 1989 && v.ry <= 1999).sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Revelation Records', items: vids.filter(v => /revelation/i.test(v.src)).sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Punk Classics · 1976–1999', items: vids.filter(v => v.g === 'Punk' && v.ry && v.ry < 2000).sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Pop Punk & Skate Punk', items: sshuf('k6', vids.filter(v => v.g === 'Punk' && POPSKATE.test(v.ar))), kind: 'wide' });
   rows.push({ title: 'Hardcore Classics', items: vids.filter(v => v.g === 'Hardcore' && v.ry && v.ry < 2005).sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Hardcore Live', items: ALL.filter(v => v.live && v.g === 'Hardcore').sort((a, b) => b.v - a.v), kind: 'wide' });
+  rows.push({ title: 'Punk Live', items: ALL.filter(v => v.live && v.g === 'Punk').sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'Hip Hop Live', items: ALL.filter(v => v.live && v.g === 'Hip Hop').sort((a, b) => b.v - a.v), kind: 'wide' });
   rows.push({ title: 'New Releases', items: vids.filter(v => v.y >= 2024).sort((a, b) => b.y - a.y || b.v - a.v), kind: 'wide' });
   sshuf('k5', Object.entries(groupBy(ALL, v => v.ar)).filter(([, i]) => i.length >= 6)).slice(0, 6).forEach(([ar, items]) => rows.push({ title: `Spotlight: ${ar}`, items: items.sort((a, b) => a.live - b.live || b.v - a.v), kind: 'wide' }));
@@ -1095,6 +1100,7 @@ function showPage(view) {
   setNav(view);
   if (view === 'home') return goHome();
   if (view === 'hardcore') return showGrid('Hardcore', ALL.filter(v => v.g === 'Hardcore').sort((a, b) => (a.live - b.live) || b.v - a.v));
+  if (view === 'punk') return showGrid('Punk', ALL.filter(v => v.g === 'Punk').sort((a, b) => (a.live - b.live) || b.v - a.v));
   if (view === 'hiphop') return showGrid('Hip Hop', ALL.filter(v => v.g === 'Hip Hop').sort((a, b) => (a.live - b.live) || b.v - a.v));
   if (view === 'live') return showGrid('Full Sets & Live Sessions', ALL.filter(v => v.live).sort((a, b) => b.v - a.v));
   if (view === 'artists') return showGrid('Artists', [], chipsHTML());
@@ -1109,7 +1115,7 @@ $('links').onclick = e => { const b = e.target.closest('button'); if (b) showPag
 const menuOpen = () => !$('mmenu').hidden;
 function renderMenu() {
   const cur = (document.querySelector('#links button.on') || {}).dataset?.view || 'home';
-  const count = { home: '', hardcore: ALL.filter(v => v.g === 'Hardcore').length, hiphop: ALL.filter(v => v.g === 'Hip Hop').length, live: ALL.filter(v => v.live).length, artists: Object.keys(groupBy(ALL, v => v.ch)).length, full: ALL.filter(v => !v.tour).length, tours: ALL.filter(v => v.tour).length, boxart: ALL.filter(v => v.a).length, brands: Object.keys(groupBy(ALL, v => v.ch)).length, mylist: myList.map(id => BY[id]).filter(v => v && v.sec === SEC).length };
+  const count = { home: '', hardcore: ALL.filter(v => v.g === 'Hardcore').length, punk: ALL.filter(v => v.g === 'Punk').length, hiphop: ALL.filter(v => v.g === 'Hip Hop').length, live: ALL.filter(v => v.live).length, artists: Object.keys(groupBy(ALL, v => v.ch)).length, full: ALL.filter(v => !v.tour).length, tours: ALL.filter(v => v.tour).length, boxart: ALL.filter(v => v.a).length, brands: Object.keys(groupBy(ALL, v => v.ch)).length, mylist: myList.map(id => BY[id]).filter(v => v && v.sec === SEC).length };
   $('mmlinks').innerHTML = NAV[SEC].map(([v, l], i) => `<button data-view="${v}" class="${v === cur ? 'on' : ''}" style="--i:${i}">${esc(l)}<small>${count[v] ? count[v] : ''}</small></button>`).join('');
   $('mmch').textContent = '· ' + CH(); $('mmnp').hidden = !isMini();
 }
@@ -1322,7 +1328,7 @@ function staticOn(on) {
 
 const NAV = {
   skate: [['home', 'Home'], ['full', 'Full-Length'], ['tours', 'Tours'], ['boxart', 'VHS & DVD'], ['brands', 'Brands'], ['mylist', 'My List']],
-  music: [['home', 'Home'], ['hardcore', 'Hardcore'], ['hiphop', 'Hip Hop'], ['live', 'Live Sets'], ['artists', 'Artists'], ['mylist', 'My List']],
+  music: [['home', 'Home'], ['hardcore', 'Hardcore'], ['punk', 'Punk'], ['hiphop', 'Hip Hop'], ['live', 'Live Sets'], ['artists', 'Artists'], ['mylist', 'My List']],
 };
 function buildIn() {
   if (reduce) return;
