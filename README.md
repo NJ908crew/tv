@@ -1,6 +1,6 @@
 # OutofStep.tv
 
-A streaming-style home for official skate videos and music videos on YouTube. Skate is live now; Music (Hardcore, Hip Hop) is coming.
+A streaming-style home for official skate videos and music videos on YouTube. Skate and Music (Hardcore, Punk, Hip Hop) are live.
 
 - `index.html` – the site
 - `videos.js` – the catalog (681 videos)
