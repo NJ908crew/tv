@@ -6,6 +6,8 @@
 <title>OutofStep.tv</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: streaming home — fixed nav, billboard with muted preview, rows of covers with hover cards, Top 10 and box-art rows; detail modal; full-screen player with up-next rail. */
@@ -700,8 +702,8 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     </div>
   </div>
 </div>
-<script src="videos.js?v=20261010010153"></script>
-<script src="music.js?v=20261010010153"></script>
+<script src="videos.js?v=20261010011208"></script>
+<script src="music.js?v=20261010011208"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -715,7 +717,7 @@ if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= auto-update =================
    Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
    reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
-const BUILD = '20261010010153';
+const BUILD = '20261010011208';
 (() => {
   if (!location.protocol.startsWith('http')) return;
   let quietSince = Date.now();
@@ -849,21 +851,40 @@ function tileHTML(v, i, kind, bars) {
 function topHTML(v, i) {
   return `<div class="top-item"><span class="num" aria-hidden="true">${i + 1}</span><button class="tile t" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${art(v)}" alt="${esc(v.t)}" ${fb(v.id)}></button></div>`;
 }
-function renderRows() {
-  ROWS = buildRows();
-  $('rows').innerHTML = ROWS.map((r, ri) => {
-    const items = r.items.slice(0, r.kind === 'top' ? 10 : TV ? 20 : 36);
-    const pages = Math.ceil(items.length / (r.kind === 'tall' ? 7 : r.kind === 'top' ? 5 : 6));
-    return `<section class="row" data-row="${ri}">
-      <div class="row-head"><h2>${esc(r.title)}</h2>${r.items.length > 6 && r.kind !== 'top' ? `<button class="explore" data-explore="${ri}">Explore All ›</button>` : ''}<div class="pager">${Array.from({ length: Math.min(pages, 8) }, (_, k) => `<i class="${k ? '' : 'on'}"></i>`).join('')}</div></div>
+function rowHTML(r, ri) {
+  const items = r.items.slice(0, r.kind === 'top' ? 10 : TV ? 20 : 36);
+  const pages = Math.ceil(items.length / (r.kind === 'tall' ? 7 : r.kind === 'top' ? 5 : 6));
+  return `<section class="row" data-row="${ri}">
+      <div class="row-head"><h2>${esc(r.title)}</h2>${r.items.length > 6 && r.kind !== 'top' ? `<button class="explore" data-explore="1">Explore All ›</button>` : ''}<div class="pager">${Array.from({ length: Math.min(pages, 8) }, (_, k) => `<i class="${k ? '' : 'on'}"></i>`).join('')}</div></div>
       <div class="slider">
         <button class="handle l" data-dir="-1" aria-label="Previous" hidden><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <div class="track ${r.kind}">${items.map((v, i) => r.kind === 'top' ? topHTML(v, i) : tileHTML(v, i, r.kind, r.bars)).join('')}${r.items.length > 6 && r.kind !== 'top' ? `<button class="tile more-tile" data-explore="${ri}"><b>Explore all</b><span>${r.items.length} videos ›</span></button>` : ''}</div>
+        <div class="track ${r.kind}">${items.map((v, i) => r.kind === 'top' ? topHTML(v, i) : tileHTML(v, i, r.kind, r.bars)).join('')}${r.items.length > 6 && r.kind !== 'top' ? `<button class="tile more-tile" data-explore="1"><b>Explore all</b><span>${r.items.length} videos ›</span></button>` : ''}</div>
         <button class="handle r" data-dir="1" aria-label="Next"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M9 5l7 7-7 7"/></svg></button>
       </div></section>`;
-  }).join('');
-  document.querySelectorAll('.track').forEach(t => t.addEventListener('scroll', () => syncPager(t), { passive: true }));
+}
+// what a row shows; rows whose signature is unchanged are kept as-is (no rebuild, scroll position and focus kept)
+function rowSig(r) {
+  const items = r.items.slice(0, r.kind === 'top' ? 10 : TV ? 20 : 36);
+  return [SEC, r.title, r.kind, r.items.length, items.map(v => { const p = r.bars && progress[v.id]; return v.id + (p && p.d ? ':' + Math.round(p.t / p.d * 50) : ''); }).join(',')].join('|');
+}
+let rowsToken = 0;
+function renderRows() {
+  ROWS = buildRows();
+  const box = $('rows'), token = ++rowsToken;
+  const old = new Map(); [...box.children].forEach(n => n.dataset.sig && !old.has(n.dataset.sig) ? old.set(n.dataset.sig, n) : n.remove());
+  const sigs = ROWS.map(rowSig);
+  const make = ri => { const t = document.createElement('template'); t.innerHTML = rowHTML(ROWS[ri], ri); const n = t.content.firstElementChild; n.dataset.sig = sigs[ri]; const tr = n.querySelector('.track'); tr.addEventListener('scroll', () => syncPager(tr), { passive: true }); return n; };
+  const lazy = TV && !sigs.some(sg => old.has(sg)); // fresh build on a TV: draw the top rows now and the rest a moment later
+  const nodes = sigs.map((sg, ri) => { const n = old.get(sg); if (n) { old.delete(sg); n.dataset.row = ri; return n; } return lazy && ri >= 4 ? null : make(ri); });
+  old.forEach(n => n.remove());
+  let ref = box.firstElementChild;
+  nodes.forEach(n => { if (!n) return; if (n === ref) { ref = ref.nextElementSibling; return; } box.insertBefore(n, ref); });
   revealRows();
+  if (lazy && ROWS.length > 4) {
+    let ri = 4;
+    const more = () => { if (token !== rowsToken) return; const f = document.createDocumentFragment(); for (const end = Math.min(ri + 4, ROWS.length); ri < end; ri++) f.appendChild(make(ri)); box.appendChild(f); revealRows(); if (ri < ROWS.length) setTimeout(more, 60); };
+    setTimeout(more, 120);
+  }
 }
 /* rows fade up as they scroll into view */
 const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(en => en.target.classList.toggle('in', en.isIntersecting)), { rootMargin: '0px 0px -6% 0px', threshold: 0 }) : null;
@@ -923,7 +944,7 @@ $('rows').addEventListener('click', e => {
   const h = e.target.closest('.handle');
   if (h) { const t = h.parentElement.querySelector('.track'); t.scrollBy({ left: +h.dataset.dir * (t.clientWidth - 40), behavior: 'smooth' }); return; }
   const ex = e.target.closest('[data-explore]');
-  if (ex) { const r = ROWS[+ex.dataset.explore]; if (r.more) return showPage(r.more); return showGrid(r.title, r.items); }
+  if (ex) { const r = ROWS[+ex.closest('.row').dataset.row]; if (r.more) return showPage(r.more); return showGrid(r.title, r.items); }
   const tile = e.target.closest('.tile');
   if (tile) { const r = ROWS[+tile.closest('.row').dataset.row]; openDetail(BY[tile.dataset.id], r.items); }
 });
