@@ -705,8 +705,8 @@ html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: h
     </div>
   </div>
 </div>
-<script src="videos.js?v=20261010115106"></script>
-<script src="music.js?v=20261010115106"></script>
+<script src="videos.js?v=20261010115141"></script>
+<script src="music.js?v=20261010115141"></script>
 <script>
 /* ================= device ================= */
 const TV = (() => {
@@ -720,7 +720,7 @@ if (TV) document.documentElement.classList.add('tv', 'kb');
 /* ================= auto-update =================
    Each publish stamps BUILD here and in version.json. When they differ, a newer version is live:
    reload right away when the app is reopened, or after 2 quiet minutes — never while a video is playing. */
-const BUILD = '20261010115106';
+const BUILD = '20261010115141';
 (() => {
   if (!location.protocol.startsWith('http')) return;
   let quietSince = Date.now();
@@ -754,6 +754,7 @@ const full = v => isM(v) ? `${v.ar} – ${v.t}` : v.t;
 const kindTxt = v => isM(v) ? (v.live ? 'Live set' : 'Music video') : (v.tour ? 'Tour video' : 'Full-length video');
 const boxTxt = v => isM(v) ? (v.live ? 'LIVE' : 'VIDEO') : (v.tour ? 'TOUR' : 'FULL');
 const MCH = { all: ['All Music', () => true], hardcore: ['Hardcore', v => v.g === 'Hardcore'], punk: ['Punk', v => v.g === 'Punk'], hiphop: ['Hip Hop', v => v.g === 'Hip Hop'] };
+if (!MUSIC.some(v => v.g === 'Punk')) delete MCH.punk; // genre appears once it has videos
 let liveCh = 'all'; try { liveCh = JSON.parse(localStorage.getItem('stv-mch')) || 'all'; } catch (e) {} if (!MCH[liveCh]) liveCh = 'all';
 const CH = () => SEC === 'music' ? (MCH[liveCh][0] + ' Channel') : 'Channel 7';
 const yti = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -1330,6 +1331,7 @@ const NAV = {
   skate: [['home', 'Home'], ['full', 'Full-Length'], ['tours', 'Tours'], ['boxart', 'VHS & DVD'], ['brands', 'Brands'], ['mylist', 'My List']],
   music: [['home', 'Home'], ['hardcore', 'Hardcore'], ['punk', 'Punk'], ['hiphop', 'Hip Hop'], ['live', 'Live Sets'], ['artists', 'Artists'], ['mylist', 'My List']],
 };
+if (!MCH.punk) NAV.music = NAV.music.filter(([k]) => k !== 'punk');
 function buildIn() {
   if (reduce) return;
   const hv = $('homeview'), nv = $('nav');
