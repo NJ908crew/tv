@@ -148,6 +148,12 @@ def do_addskate(spec_file, out_file):
                 if len(b) > 5000:
                     open(os.path.join(d, f'{vid}.thumb.jpg'), 'wb').write(b); r['thumb'] = name; break
             except Exception: pass
+        for comp, word in it.get('find', []):  # look the slug up on a company page
+            try:
+                _, h = get('https://skatevideosite.com/companies/' + comp)
+                it.setdefault('slugs', []).extend(sorted({x for x in re.findall(r'/videos/([a-z0-9-]+)', h) if word in x}))
+            except Exception: pass
+        r['tried'] = it.get('slugs', [])
         for slug in it.get('slugs', []):
             try:
                 _, h = get('https://skatevideosite.com/videos/' + slug)
