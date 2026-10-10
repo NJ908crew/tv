@@ -555,6 +555,15 @@ html.tv .mini-hit { pointer-events: none; }
 .row.rv.in .track > * { opacity: 1; transform: none; transition-delay: calc(var(--d, 0) * 45ms + 80ms); }
 html { scroll-behavior: smooth; }
 .track { scroll-behavior: smooth; }
+/* TV performance: one video at a time, no motion effects, no heavy shadows */
+html.tv, html.tv .track { scroll-behavior: auto; }
+html.tv *, html.tv *::before, html.tv *::after { animation: none !important; transition: none !important; }
+html.tv .row.rv, html.tv .row.rv .track > * { opacity: 1; transform: none; }
+html.tv .tile:focus, html.tv .m-card:focus { box-shadow: none; }
+html.tv .live-btn i, html.tv .mm-live i { box-shadow: none; }
+html.tv .bb-title, html.tv .bb-desc { text-shadow: none; }
+html.tv .bb-video { display: none; }
+html.tv.pfull #homeview, html.tv.pfull #page, html.tv.pfull #nav { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .row.rv, .row.rv .track > * { opacity: 1; transform: none; }
   html, .track { scroll-behavior: auto; }
@@ -711,7 +720,9 @@ const BY = Object.fromEntries([...SKATE, ...MUSIC].map(v => [v.id, v]));
 let SEC = 'skate', ALL = SKATE, PLAYABLE = SKATE.filter(v => v.e);
 const $ = id => document.getElementById(id);
 const cover = id => { const v = BY[id]; return v && v.sec === 'music' ? `https://i.ytimg.com/vi/${id}/${v.hq ? 'hqdefault' : 'maxresdefault'}.jpg` : `covers/${id}.jpg`; };
-const art = v => v.a ? `covers/art/${v.id}.jpg` : cover(v.id);
+const art = v => v.a ? `covers/art/${TV ? 'sm/' : ''}${v.id}.jpg` : thumb(v.id);
+// TV tiles use small thumbnails (about a fifth of the size) so cheap TVs don't run out of memory
+const thumb = id => { if (!TV) return cover(id); const v = BY[id]; return v && v.sec === 'music' ? `https://i.ytimg.com/vi/${id}/mqdefault.jpg` : `covers/sm/${id}.jpg`; };
 const isM = v => v && v.sec === 'music';
 const full = v => isM(v) ? `${v.ar} – ${v.t}` : v.t;
 const kindTxt = v => isM(v) ? (v.live ? 'Live set' : 'Music video') : (v.tour ? 'Tour video' : 'Full-length video');
@@ -813,7 +824,7 @@ function tileHTML(v, i, kind, bars) {
   const p = progress[v.id]; const pct = bars && p && p.d ? Math.min(100, p.t / p.d * 100) : 0;
   const flag = v.y >= 2026 ? '<span class="flag">New</span>' : '';
   if (kind === 'tall') return `<button class="tile t" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${art(v)}" alt="${esc(v.t)}" ${fb(v.id)}></button>`;
-  return `<button class="tile w ${pct ? 'has-bar' : ''}" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${cover(v.id)}" alt="" ${fb(v.id)}>${flag}<span class="cap">${isM(v) ? `<span class="ar">${esc(v.ar)}</span><span class="tt">${esc(v.t)}</span>` : `<span class="tl">${esc(v.t)}</span>`}</span>${pct ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ''}</button>`;
+  return `<button class="tile w ${pct ? 'has-bar' : ''}" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${thumb(v.id)}" alt="" ${fb(v.id)}>${flag}<span class="cap">${isM(v) ? `<span class="ar">${esc(v.ar)}</span><span class="tt">${esc(v.t)}</span>` : `<span class="tl">${esc(v.t)}</span>`}</span>${pct ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ''}</button>`;
 }
 function topHTML(v, i) {
   return `<div class="top-item"><span class="num" aria-hidden="true">${i + 1}</span><button class="tile t" data-id="${v.id}" data-i="${i}"><img loading="lazy" src="${art(v)}" alt="${esc(v.t)}" ${fb(v.id)}></button></div>`;
@@ -821,7 +832,7 @@ function topHTML(v, i) {
 function renderRows() {
   ROWS = buildRows();
   $('rows').innerHTML = ROWS.map((r, ri) => {
-    const items = r.items.slice(0, r.kind === 'top' ? 10 : 36);
+    const items = r.items.slice(0, r.kind === 'top' ? 10 : TV ? 20 : 36);
     const pages = Math.ceil(items.length / (r.kind === 'tall' ? 7 : r.kind === 'top' ? 5 : 6));
     return `<section class="row" data-row="${ri}">
       <div class="row-head"><h2>${esc(r.title)}</h2>${r.items.length > 6 && r.kind !== 'top' ? `<button class="explore" data-explore="${ri}">Explore All ›</button>` : ''}<div class="pager">${Array.from({ length: Math.min(pages, 8) }, (_, k) => `<i class="${k ? '' : 'on'}"></i>`).join('')}</div></div>
@@ -837,7 +848,7 @@ function renderRows() {
 /* rows fade up as they scroll into view */
 const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(en => en.target.classList.toggle('in', en.isIntersecting)), { rootMargin: '0px 0px -6% 0px', threshold: 0 }) : null;
 function revealRows() {
-  if (!rowIO || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!rowIO || TV || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.querySelectorAll('#rows .row').forEach(r => {
     r.classList.add('rv'); rowIO.observe(r); // re-animates every time the row comes back into view
     const tr = r.querySelector('.track'); if (tr) [...tr.children].forEach((t, c) => t.style.setProperty('--d', Math.min(c, 7)));
@@ -997,7 +1008,7 @@ function openDetail(v, list) {
         ${v.v ? `<div>On YouTube: <b>${viewsTxt(v.v)}</b></div>` : ''}
       </div>
     </div>
-    ${more.length ? `<div class="m-more"><h3>${esc(moreTitle)}</h3><div class="m-grid">${more.map(x => `<button class="m-card" data-id="${x.id}"><div class="im"><img loading="lazy" src="${cover(x.id)}" alt="" ${fb(x.id)}><span>${fmt(x.s)}</span></div><div class="tx"><b>${esc(full(x))}</b><small>${yearOf(x) || ''} · ${mins(x.s)}</small></div></button>`).join('')}</div></div>` : ''}
+    ${more.length ? `<div class="m-more"><h3>${esc(moreTitle)}</h3><div class="m-grid">${more.map(x => `<button class="m-card" data-id="${x.id}"><div class="im"><img loading="lazy" src="${thumb(x.id)}" alt="" ${fb(x.id)}><span>${fmt(x.s)}</span></div><div class="tx"><b>${esc(full(x))}</b><small>${yearOf(x) || ''} · ${mins(x.s)}</small></div></button>`).join('')}</div></div>` : ''}
   </div>`;
   $('modalwrap').hidden = false; document.body.classList.add('lock'); $('modalwrap').scrollTop = 0;
   $('modalwrap').dataset.id = v.id;
@@ -1107,6 +1118,7 @@ window.onYouTubeIframeAPIReady = () => {
   if (location.protocol.startsWith('http')) vars.origin = location.origin;
   yt = new YT.Player('yt', { width: '100%', height: '100%', playerVars: TV ? { ...vars, controls: 0, disablekb: 1, fs: 0 } : vars, events: {
     onReady: () => { ytReady = true; try { yt.getIframe().tabIndex = -1; } catch (e) {} if (pending) { const id = pending; pending = null; loadNow(id); } }, onStateChange: onState, onError: onErr } });
+  if (TV) return; // TV: no background preview video — only one video decodes at a time
   bbYT = new YT.Player('bbyt', { width: '100%', height: '100%', playerVars: { ...vars, controls: 0, disablekb: 1, fs: 0, mute: 1 }, events: {
     onReady: () => { bbReady = true; try { bbYT.getIframe().tabIndex = -1; } catch (e) {} bbTimer = setTimeout(startPreview, 2600); },
     onStateChange: e => {
@@ -1124,7 +1136,7 @@ function playFrom(list, v, title = 'Up next', live = false) {
   P.title = title; P.live = live; P.dead.clear();
   stopPreview(); hideBob(); closeDetail();
   $('player').classList.remove('mini', 'paused'); clearInterval(P.miniT); $('npbtn').hidden = true; hideToast();
-  $('player').hidden = false; document.body.classList.add('lock');
+  $('player').hidden = false; document.body.classList.add('lock'); pfull(true);
   $('pkicker').textContent = live ? '● Live · ' + CH() : title;
   begin(false); armIdle();
   if (TV) { $('side').classList.remove('tv-open'); $('tvq').setAttribute('aria-pressed', 'false'); setTimeout(() => { focusEl($('tvplay')); syncTV(); }, 60); }
@@ -1163,6 +1175,8 @@ function onErr(e) {
 function saveProg() { const v = cur(); if (!v || !yt || !yt.getCurrentTime) return; const t = yt.getCurrentTime(), d = yt.getDuration() || v.s; if (t > 5) { progress[v.id] = { t, d, at: Date.now() }; store.set('progress', progress); } }
 const PLAY_ICO = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>', PAUSE_ICO = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
 const isMini = () => $('player').classList.contains('mini');
+// full-screen player on TV: stop drawing the page underneath so the video gets the whole TV
+function pfull(on) { document.documentElement.classList.toggle('pfull', on); }
 function syncMini() {
   let playing = false; try { playing = yt && yt.getPlayerState && yt.getPlayerState() === 1; } catch (e) {}
   $('miniplay').innerHTML = playing ? PAUSE_ICO : PLAY_ICO; $('miniplay').setAttribute('aria-label', playing ? 'Pause' : 'Play');
@@ -1172,7 +1186,7 @@ function miniTick() { try { const d = yt.getDuration(), t = yt.getCurrentTime();
 function minimizePlayer() {
   if ($('player').hidden || isMini()) return;
   saveProg(); clearTimeout(idleT); $('player').classList.remove('idle');
-  $('player').classList.add('mini'); document.body.classList.remove('lock');
+  $('player').classList.add('mini'); document.body.classList.remove('lock'); pfull(false);
   syncMini(); miniTick(); clearInterval(P.miniT); P.miniT = setInterval(miniTick, 1000);
   if (TV) { $('npbtn').hidden = false; tvToast('The video keeps playing. To go back to it, press <b>▲ Up</b> to the top and select <b>Now Playing</b>, or move down to the mini player.'); }
   if (!$('homeview').hidden) renderRows();
@@ -1183,7 +1197,7 @@ function expandPlayer() {
   $('npbtn').hidden = true; hideToast();
   $('player').classList.remove('mini', 'paused'); clearInterval(P.miniT);
   rememberFocus(); pushLayer();
-  stopPreview(); hideBob(); closeDetail(); document.body.classList.add('lock'); armIdle();
+  stopPreview(); hideBob(); closeDetail(); document.body.classList.add('lock'); pfull(true); armIdle();
   if (TV) setTimeout(() => { focusEl($('tvplay')); syncTV(); }, 60);
 }
 $('minihit').onclick = expandPlayer;
@@ -1197,7 +1211,7 @@ $('miniclose').onclick = e => { e.stopPropagation(); closePlayer(); };
 function closePlayer() {
   saveProg(); clearInterval(P.save); clearInterval(P.miniT); clearCard(); try { yt && yt.stopVideo(); } catch (e) {}
   $('player').classList.remove('mini', 'paused'); $('npbtn').hidden = true; hideToast();
-  $('player').hidden = true; document.body.classList.remove('lock');
+  $('player').hidden = true; document.body.classList.remove('lock'); pfull(false);
   if (!$('homeview').hidden) { renderRows(); }
 }
 function renderSide() {
@@ -1210,7 +1224,7 @@ function renderSide() {
   $('sidesub').textContent = P.live ? 'Coming up on ' + CH() : 'Up next · ' + P.title;
   renderChSel();
   const n = P.q.length, idx = []; for (let k = 0; k < Math.min(n, 30); k++) idx.push((P.i + k) % n);
-  $('queue').innerHTML = idx.map((j, k) => { const q = P.q[j]; return `<button class="q ${k === 0 ? 'on' : ''} ${P.dead.has(q.id) ? 'dead' : ''}" data-j="${j}"><span class="n">${k === 0 ? '▶' : k}</span><div class="im"><img loading="lazy" src="${cover(q.id)}" alt="" ${fb(q.id)}><span>${fmt(q.s)}</span></div><div><div class="t">${esc(isM(q) ? q.t : q.t)}</div><div class="c">${k === 0 ? 'Now playing' : esc(q.ch)}</div></div></button>`; }).join('');
+  $('queue').innerHTML = idx.map((j, k) => { const q = P.q[j]; return `<button class="q ${k === 0 ? 'on' : ''} ${P.dead.has(q.id) ? 'dead' : ''}" data-j="${j}"><span class="n">${k === 0 ? '▶' : k}</span><div class="im"><img loading="lazy" src="${thumb(q.id)}" alt="" ${fb(q.id)}><span>${fmt(q.s)}</span></div><div><div class="t">${esc(isM(q) ? q.t : q.t)}</div><div class="c">${k === 0 ? 'Now playing' : esc(q.ch)}</div></div></button>`; }).join('');
   $('queue').scrollTop = 0;
 }
 $('queue').onclick = e => { const b = e.target.closest('.q'); if (!b) return; P.i = +b.dataset.j; P.dead.delete(cur().id); begin(false); if (TV) { toggleQueue(false); focusEl($('tvplay')); } };
@@ -1243,7 +1257,7 @@ function showNotice(t, s) { $('notice').innerHTML = `<div>${esc(t)}<small>${esc(
 function hideNotice() { $('notice').hidden = true; }
 
 const cv = $('static'), cx = cv.getContext('2d'); let st = false, raf = 0;
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduce = TV || matchMedia('(prefers-reduced-motion: reduce)').matches;
 function drawStatic() { const im = cx.createImageData(160, 90), d = im.data; for (let i = 0; i < d.length; i += 4) { const g = Math.random() * 190 | 0; d[i] = d[i + 1] = d[i + 2] = g; d[i + 3] = 255; } cx.putImageData(im, 0, 0); if (st && !reduce) raf = requestAnimationFrame(drawStatic); }
 function staticOn(on) { st = on; cv.hidden = !on; cancelAnimationFrame(raf); if (on) drawStatic(); }
 
