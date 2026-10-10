@@ -24,8 +24,9 @@ import android.widget.FrameLayout
 class MainActivity : Activity() {
 
     companion object {
+        // The old address redirects to the custom domain once it's set up, so both stay in the app.
         const val HOME = "https://nj908crew.github.io/tv/"
-        const val HOST = "nj908crew.github.io"
+        val HOSTS = setOf("nj908crew.github.io", "outofstep.tv", "www.outofstep.tv")
     }
 
     private lateinit var web: WebView
@@ -64,7 +65,7 @@ class MainActivity : Activity() {
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url
-                if (url.host == HOST || url.scheme == "file") return false
+                if (url.host in HOSTS || url.scheme == "file") return false
                 // Anything else (e.g. "Watch on YouTube") opens in the TV's own app.
                 try { startActivity(Intent(Intent.ACTION_VIEW, url)) } catch (_: Exception) {}
                 return true
